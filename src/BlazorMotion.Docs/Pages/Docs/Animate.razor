@@ -21,13 +21,23 @@
 &lt;/Motion&gt;</code></pre>
 
 <div class="demo-area">
-    <Motion Class="demo-box"
-            Initial="@(new AnimationProps { Opacity = 0, Y = 30 })"
-            Animate="@(new AnimationProps { Opacity = 1, Y = 0 })"
-            Transition="@(new TransitionConfig { Duration = 0.6, Ease = BlazorMotion.Models.Easing.EaseOut })">
-        Fade up
-    </Motion>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:1.25rem;">
+        <Motion @key="_replayKey"
+                Class="demo-box"
+                Initial="@(new AnimationProps { Opacity = 0, Y = 30 })"
+                Animate="@(new AnimationProps { Opacity = 1, Y = 0 })"
+                Transition="@(new TransitionConfig { Duration = 0.6, Ease = BlazorMotion.Models.Easing.EaseOut })">
+            Fade up
+        </Motion>
+        <button class="demo-button" @onclick="Replay">&#9654; Replay</button>
+    </div>
 </div>
+
+@code {
+    private int _replayKey = 0;
+
+    private void Replay() => _replayKey++;
+}
 
 <h2>AnimationProps reference</h2>
 <table class="prop-table">

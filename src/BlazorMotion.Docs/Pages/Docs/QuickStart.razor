@@ -33,13 +33,23 @@ builder.Services.AddBlazorMotion();</code></pre>
 &lt;/Motion&gt;</code></pre>
 
 <div class="demo-area">
-    <Motion Class="demo-box"
-            Initial="@(new AnimationProps { Opacity = 0, Scale = 0.5 })"
-            Animate="@(new AnimationProps { Opacity = 1, Scale = 1 })"
-            Transition="@(TransitionConfig.BounceSpring(0.6, 0.4))">
-        ✨
-    </Motion>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:1.25rem;">
+        <Motion @key="_replayKey" 
+                Class="demo-box"
+                Initial="@(new AnimationProps { Opacity = 0, Scale = 0.5 })"
+                Animate="@(new AnimationProps { Opacity = 1, Scale = 1 })"
+                Transition="@(TransitionConfig.BounceSpring(0.6, 0.4))">
+            ✨
+        </Motion>
+        <button class="demo-button" @onclick="Replay">&#9654; Replay</button>
+    </div>
 </div>
+
+@code {
+    private int _replayKey = 0;
+
+    private void Replay() => _replayKey++;
+}
 
 <h2>Next steps</h2>
 <ul>
