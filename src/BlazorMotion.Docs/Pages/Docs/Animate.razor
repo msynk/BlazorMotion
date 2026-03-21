@@ -4,20 +4,24 @@
 
 <div class="breadcrumb">Docs / <span>Animate</span></div>
 <h1>Animate</h1>
-<p>Animate elements by setting values on the <code>Animate</code> parameter. BlazorMotion automatically transitions from <code>Initial</code> to <code>Animate</code> on mount, and re-animates whenever <code>Animate</code> changes.</p>
+<p>
+    Animate elements by setting values on the <code>Animate</code> parameter.
+    BlazorMotion automatically transitions from <code>Initial</code> to <code>Animate</code>
+    on mount and re-animates whenever <code>Animate</code> changes.
+    All animation physics run in C# (WASM) — no external JS animation library required.
+</p>
 
-<h2>Basic animation</h2>
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>Enter animation</h2>
+<p>
+    Set <code>Initial</code> to define where an element starts, and <code>Animate</code>
+    to define where it ends. BlazorMotion plays this animation once on mount.
+</p>
 <pre><code>&lt;Motion Tag="div"
-        Animate="@@(new AnimationProps { X = 100 })"&gt;
-    Slides right
-&lt;/Motion&gt;</code></pre>
-
-<h2>Multiple values</h2>
-<p>Animate any combination of transform, opacity, and color properties simultaneously:</p>
-<pre><code>&lt;Motion Tag="div"
-        Initial="@@(new AnimationProps { Opacity = 0, Scale = 0.5, Y = -20 })"
-        Animate="@@(new AnimationProps  { Opacity = 1, Scale = 1,   Y = 0 })"
-        Transition="@@(new TransitionConfig { Duration = 0.4, Ease = "easeOut" })"&gt;
+        Initial="@@(new AnimationProps { Opacity = 0, Y = 30 })"
+        Animate="@@(new AnimationProps  { Opacity = 1, Y = 0 })"
+        Transition="@@(new TransitionConfig { Duration = 0.5, Ease = Easing.EaseOut })"&gt;
+    Hello!
 &lt;/Motion&gt;</code></pre>
 
 <div class="demo-area">
@@ -25,54 +29,599 @@
         <Motion @key="_replayKey"
                 Class="demo-box"
                 Initial="@(new AnimationProps { Opacity = 0, Y = 30 })"
-                Animate="@(new AnimationProps { Opacity = 1, Y = 0 })"
-                Transition="@(new TransitionConfig { Duration = 0.6, Ease = BlazorMotion.Models.Easing.EaseOut })">
+                Animate="@(new AnimationProps  { Opacity = 1, Y = 0 })"
+                Transition="@(new TransitionConfig { Duration = 0.6, Ease = Easing.EaseOut })">
             Fade up
         </Motion>
         <button class="demo-button" @onclick="Replay">&#9654; Replay</button>
     </div>
 </div>
 
-@code {
-    private int _replayKey = 0;
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>Multiple values</h2>
+<p>Animate any combination of transform, opacity, color, and layout properties simultaneously.</p>
+<pre><code>&lt;Motion Tag="div"
+        Initial="@@(new AnimationProps { Opacity = 0, Scale = 0.5, Y = -20 })"
+        Animate="@@(new AnimationProps  { Opacity = 1, Scale = 1,   Y = 0 })"
+        Transition="@@(new TransitionConfig { Duration = 0.4, Ease = Easing.EaseOut })" /&gt;</code></pre>
 
-    private void Replay() => _replayKey++;
+<div class="demo-area" style="display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+        <Motion @key="_replayKey2"
+                Class="demo-box"
+                Initial="@(new AnimationProps { Opacity = 0, Scale = 0.3 })"
+                Animate="@(new AnimationProps  { Opacity = 1, Scale = 1 })"
+                Transition="@(TransitionConfig.BounceSpring(0.5, 0.4))">
+            Scale + Fade
+        </Motion>
+        <span style="font-size:0.75rem;color:var(--text-muted)">Scale + Opacity</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+        <Motion @key="_replayKey2"
+                Class="demo-box"
+                Initial="@(new AnimationProps { Opacity = 0, X = -50, Rotate = -15 })"
+                Animate="@(new AnimationProps  { Opacity = 1, X = 0,  Rotate = 0 })"
+                Transition="@(new TransitionConfig { Type = TransitionType.Spring, Stiffness = 260, Damping = 20 })">
+            Rotate + Slide
+        </Motion>
+        <span style="font-size:0.75rem;color:var(--text-muted)">X + Rotate + Opacity</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+        <Motion @key="_replayKey2"
+                Class="demo-box"
+                Initial="@(new AnimationProps { Opacity = 0, Scale = 1.5, BorderRadius = "50%" })"
+                Animate="@(new AnimationProps  { Opacity = 1, Scale = 1,   BorderRadius = "12px" })"
+                Transition="@(new TransitionConfig { Duration = 0.55, Ease = Easing.EaseOut })">
+            Morph
+        </Motion>
+        <span style="font-size:0.75rem;color:var(--text-muted)">Scale + BorderRadius</span>
+    </div>
+    <button class="demo-button" style="align-self:flex-end;" @onclick="Replay2">&#9654; Replay</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>Transforms</h2>
+<p>BlazorMotion supports the full set of CSS transform properties as first-class numeric values:</p>
+
+<h3>Translate</h3>
+<pre><code>new AnimationProps { X = 100 }    // translate X by 100 px
+new AnimationProps { Y = -50 }    // translate Y by -50 px
+new AnimationProps { X = 80, Y = 40 }</code></pre>
+
+<h3>Scale</h3>
+<pre><code>new AnimationProps { Scale  = 1.5 }          // uniform
+new AnimationProps { ScaleX = 2, ScaleY = 0.5 }  // independent axes</code></pre>
+
+<h3>Rotate</h3>
+<pre><code>new AnimationProps { Rotate  = 180 }              // Z-axis, degrees
+new AnimationProps { RotateX = 45 }               // 3-D tilt
+new AnimationProps { RotateY = 45 }
+new AnimationProps { RotateZ = 90 }</code></pre>
+
+<h3>Skew</h3>
+<pre><code>new AnimationProps { SkewX = 15 }   // degrees
+new AnimationProps { SkewY = -10 }</code></pre>
+
+<h3>Perspective</h3>
+<pre><code>new AnimationProps { Perspective = 1200 }   // px, parent context depth</code></pre>
+
+<div class="demo-area" style="display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;">
+    @foreach (var (label, init, anim) in _transformDemos)
+    {
+        <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+            <Motion @key="@($"t{_replayKey3}-{label}")"
+                    Class="demo-box"
+                    Initial="@init"
+                    Animate="@anim"
+                    Transition="@(new TransitionConfig { Type = TransitionType.Spring, Stiffness = 200, Damping = 18 })">
+                @label
+            </Motion>
+            <span style="font-size:0.75rem;color:var(--text-muted)">@label</span>
+        </div>
+    }
+    <button class="demo-button" style="align-self:flex-end;" @onclick="Replay3">&#9654; Replay</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>Colors</h2>
+<p>
+    Animate <code>BackgroundColor</code>, <code>Color</code>, <code>BorderColor</code>, and other
+    color properties using any valid CSS color format — hex, rgb(), rgba(), hsl(), or named colors.
+    BlazorMotion interpolates channels smoothly in RGBA space.
+</p>
+<pre><code>&lt;Motion Animate="@@(new AnimationProps { BackgroundColor = "#6c47ff" })"
+        Transition="@@(new TransitionConfig { Duration = 0.4 })" /&gt;
+
+&lt;!-- Named colors --&gt;
+&lt;Motion Animate="@@(new AnimationProps { Color = "tomato" })" /&gt;
+
+&lt;!-- Color on hover --&gt;
+&lt;Motion Animate="@@(new AnimationProps { BackgroundColor = "#1e1e2e" })"
+        WhileHover="@@(new AnimationProps { BackgroundColor = "#6c47ff", Scale = 1.05 })"
+        Transition="@@(new TransitionConfig { Duration = 0.2 })" /&gt;</code></pre>
+
+<div class="demo-area" style="display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;align-items:center;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+        <Motion @key="_replayKey4"
+                Class="demo-box"
+                Initial="@(new AnimationProps { BackgroundColor = "#6c47ff" })"
+                Animate="@(new AnimationProps  { BackgroundColor = "#ff4785" })"
+                Transition="@(new TransitionConfig { Duration = 0.8, Ease = Easing.EaseInOut })">
+            BG Color
+        </Motion>
+        <span style="font-size:0.75rem;color:var(--text-muted)">BackgroundColor</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+        <Motion @key="_replayKey4"
+                Class="demo-box"
+                Style="border: 3px solid #6c47ff;"
+                Initial="@(new AnimationProps { BorderColor = "#6c47ff", Scale = 1 })"
+                Animate="@(new AnimationProps  { BorderColor = "#22c55e", Scale = 1.1 })"
+                Transition="@(new TransitionConfig { Duration = 0.6 })">
+            Border
+        </Motion>
+        <span style="font-size:0.75rem;color:var(--text-muted)">BorderColor</span>
+    </div>
+    <button class="demo-button" style="align-self:flex-end;" @onclick="Replay4">&#9654; Replay</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>Keyframes</h2>
+<p>
+    Animate a property through a <em>sequence</em> of values by passing arrays in
+    <code>AnimationProps.Keyframes</code>. Keys match property names (camelCase).
+    Use <code>TransitionConfig.Times</code> for custom timing offsets (0–1).
+</p>
+<pre><code>&lt;Motion Animate="@@(new AnimationProps
+        {
+            Keyframes = new Dictionary&lt;string, object&gt;
+            {
+                ["x"]               = new double[] { 0, 100, 50, 80, 0 },
+                ["backgroundColor"] = new string[] { "#6c47ff", "#ff4785", "#eab308", "#6c47ff" }
+            }
+        })"
+        Transition="@@(new TransitionConfig
+        {
+            Type     = TransitionType.Keyframes,
+            Times    = new[] { 0.0, 0.3, 0.6, 0.8, 1.0 },
+            Duration = 2.0,
+            Repeat   = int.MaxValue
+        })" /&gt;</code></pre>
+
+<div class="demo-area" style="display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+        <Motion Class="demo-box"
+                Animate="@(new AnimationProps
+                {
+                    Keyframes = new Dictionary<string, object>
+                    {
+                        ["scale"] = new double[] { 1.0, 1.35, 0.85, 1.1, 1.0 }
+                    }
+                })"
+                Transition="@(new TransitionConfig
+                {
+                    Type       = TransitionType.Keyframes,
+                    Duration   = 1.0,
+                    Repeat     = int.MaxValue,
+                    RepeatType = RepeatType.Loop
+                })">
+            Pulse
+        </Motion>
+        <span style="font-size:0.75rem;color:var(--text-muted)">scale keyframes</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+        <Motion Class="demo-box"
+                Animate="@(new AnimationProps
+                {
+                    Keyframes = new Dictionary<string, object>
+                    {
+                        ["x"] = new double[] { 0.0, 60.0, -60.0, 40.0, -40.0, 0.0 }
+                    }
+                })"
+                Transition="@(new TransitionConfig
+                {
+                    Type       = TransitionType.Keyframes,
+                    Duration   = 0.8,
+                    Repeat     = int.MaxValue,
+                    RepeatDelay = 1.5
+                })">
+            Shake
+        </Motion>
+        <span style="font-size:0.75rem;color:var(--text-muted)">x keyframes</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+        <Motion Class="demo-box"
+                Animate="@(new AnimationProps
+                {
+                    Keyframes = new Dictionary<string, object>
+                    {
+                        ["backgroundColor"] = new string[] { "#6c47ff", "#ff4785", "#eab308", "#22c55e", "#6c47ff" }
+                    }
+                })"
+                Transition="@(new TransitionConfig
+                {
+                    Type       = TransitionType.Keyframes,
+                    Duration   = 3.0,
+                    Repeat     = int.MaxValue
+                })">
+            Colors
+        </Motion>
+        <span style="font-size:0.75rem;color:var(--text-muted)">color keyframes</span>
+    </div>
+</div>
+
+<p>See <a href="/docs/keyframes">Keyframes</a> for the full reference.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>Repeating animations</h2>
+<p>
+    Use <code>Repeat</code> and <code>RepeatType</code> on <code>TransitionConfig</code> to loop,
+    mirror, or reverse an animation.
+</p>
+<pre><code>// Infinite loop
+new TransitionConfig { Repeat = int.MaxValue, RepeatType = RepeatType.Loop }
+
+// Ping-pong (reverse each cycle)
+new TransitionConfig { Repeat = int.MaxValue, RepeatType = RepeatType.Mirror }
+
+// Pause between repeats
+new TransitionConfig { Repeat = 5, RepeatDelay = 0.5 }</code></pre>
+
+<div class="demo-area" style="display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+        <Motion Class="demo-box"
+                Initial="@(new AnimationProps { X = -40 })"
+                Animate="@(new AnimationProps  { X = 40 })"
+                Transition="@(new TransitionConfig
+                {
+                    Duration   = 0.6,
+                    Ease       = Easing.EaseInOut,
+                    Repeat     = int.MaxValue,
+                    RepeatType = RepeatType.Mirror
+                })">
+            Mirror
+        </Motion>
+        <span style="font-size:0.75rem;color:var(--text-muted)">RepeatType.Mirror</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+        <Motion Class="demo-box"
+                Initial="@(new AnimationProps { Rotate = 0 })"
+                Animate="@(new AnimationProps  { Rotate = 360 })"
+                Transition="@(new TransitionConfig
+                {
+                    Duration   = 1.5,
+                    Ease       = Easing.Linear,
+                    Repeat     = int.MaxValue,
+                    RepeatType = RepeatType.Loop
+                })">
+            Spin
+        </Motion>
+        <span style="font-size:0.75rem;color:var(--text-muted)">Rotate loop</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+        <Motion Class="demo-box"
+                Initial="@(new AnimationProps { Opacity = 1 })"
+                Animate="@(new AnimationProps  { Opacity = 0.15 })"
+                Transition="@(new TransitionConfig
+                {
+                    Duration   = 0.9,
+                    Ease       = Easing.EaseInOut,
+                    Repeat     = int.MaxValue,
+                    RepeatType = RepeatType.Mirror
+                })">
+            Breathe
+        </Motion>
+        <span style="font-size:0.75rem;color:var(--text-muted)">Opacity mirror</span>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>Reactive (state-driven) animations</h2>
+<p>
+    Bind <code>Animate</code> to a C# property that derives from component state.
+    Every time the state changes, BlazorMotion smoothly transitions to the new target.
+</p>
+<pre><code>@@code {
+    bool _expanded = false;
+    AnimationProps _boxStyle =&gt; _expanded
+        ? new AnimationProps { Width = "240px", Height = "240px", BorderRadius = "24px" }
+        : new AnimationProps { Width = "80px",  Height = "80px",  BorderRadius = "50%" };
 }
 
+&lt;Motion Style="background:#6c47ff;cursor:pointer;"
+        Animate="@@_boxStyle"
+        Transition="@@(new TransitionConfig { Type = TransitionType.Spring, Stiffness = 300, Damping = 25 })"
+        @@onclick="@@(() =&gt; _expanded = !_expanded)" /&gt;</code></pre>
+
+<div class="demo-area" style="display:flex;flex-direction:column;align-items:center;gap:1rem;">
+    <p style="font-size:0.85rem;color:var(--text-muted)">Click the shape to toggle</p>
+    <Motion Style="background:#6c47ff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;"
+            Animate="@_reactiveStyle"
+            Transition="@(new TransitionConfig { Type = TransitionType.Spring, Stiffness = 300, Damping = 25 })"
+            @onclick="ToggleExpanded">
+        @(_expanded ? "Collapse" : "Expand")
+    </Motion>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>Per-property transitions</h2>
+<p>
+    Override the transition for individual properties using <code>TransitionConfig.Properties</code>.
+    This is useful when different values need different timing — for example opacity should fade
+    quickly while a spring drives the movement.
+</p>
+<pre><code>&lt;Motion Initial="@@(new AnimationProps { Opacity = 0, Y = 40 })"
+        Animate="@@(new AnimationProps  { Opacity = 1, Y = 0 })"
+        Transition="@@(new TransitionConfig
+        {
+            Type = TransitionType.Spring,
+            Stiffness = 200, Damping = 20,
+            Properties = new Dictionary&lt;string, TransitionConfig&gt;
+            {
+                ["opacity"] = new TransitionConfig
+                {
+                    Type     = TransitionType.Tween,
+                    Duration = 0.15,
+                    Ease     = Easing.Linear
+                }
+            }
+        })" /&gt;</code></pre>
+
+<div class="demo-area" style="display:flex;flex-direction:column;align-items:center;gap:1.25rem;">
+    <Motion @key="_replayKey5"
+            Class="demo-box"
+            Initial="@(new AnimationProps { Opacity = 0, Y = 50 })"
+            Animate="@(new AnimationProps  { Opacity = 1, Y = 0 })"
+            Transition="@(new TransitionConfig
+            {
+                Type = TransitionType.Spring,
+                Stiffness = 180, Damping = 14,
+                Properties = new Dictionary<string, TransitionConfig>
+                {
+                    ["opacity"] = new TransitionConfig
+                    {
+                        Type     = TransitionType.Tween,
+                        Duration = 0.15,
+                        Ease     = Easing.Linear
+                    }
+                }
+            })">
+        Fast fade, spring slide
+    </Motion>
+    <button class="demo-button" @onclick="Replay5">&#9654; Replay</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>Delay</h2>
+<p>
+    Use <code>Delay</code> on <code>TransitionConfig</code> to postpone the start of an animation.
+    Useful for sequencing items without variants.
+</p>
+<pre><code>@@foreach (var (item, i) in items.Select((v, i) =&gt; (v, i)))
+{
+    &lt;Motion Initial="@@(new AnimationProps { Opacity = 0, X = -20 })"
+            Animate="@@(new AnimationProps  { Opacity = 1, X = 0 })"
+            Transition="@@(new TransitionConfig { Duration = 0.4, Delay = i * 0.1 })"&gt;
+        @@item
+    &lt;/Motion&gt;
+}</code></pre>
+
+<div class="demo-area" style="display:flex;flex-direction:column;gap:0.6rem;align-items:flex-start;padding-left:2rem;">
+    @foreach (var (label, i) in _listItems.Select((l, i) => (l, i)))
+    {
+        <Motion @key="@($"li{_replayKey6}-{i}")"
+                Style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:0.5rem 1.2rem;font-weight:500;"
+                Initial="@(new AnimationProps { Opacity = 0, X = -30 })"
+                Animate="@(new AnimationProps  { Opacity = 1, X = 0 })"
+                Transition="@(new TransitionConfig { Duration = 0.4, Ease = Easing.EaseOut, Delay = i * 0.08 })">
+            @label
+        </Motion>
+    }
+    <button class="demo-button" @onclick="Replay6">&#9654; Replay</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>CSS custom properties</h2>
+<p>
+    Animate CSS custom properties (variables) using the <code>CssVars</code> dictionary.
+    Keys must start with <code>--</code>. The element and any descendants that reference the
+    variable will update automatically.
+</p>
+<pre><code>&lt;Motion Animate="@@(new AnimationProps
+        {
+            CssVars = new Dictionary&lt;string, string&gt;
+            {
+                ["--hue"] = "260"
+            }
+        })"
+        Transition="@@(new TransitionConfig { Duration = 2, Repeat = int.MaxValue, RepeatType = RepeatType.Mirror })"
+        Style="background: hsl(var(--hue), 70%, 55%)" /&gt;</code></pre>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>SVG path drawing</h2>
+<p>
+    Animate SVG strokes being "drawn" using <code>PathLength</code>, <code>PathOffset</code>, and
+    <code>PathSpacing</code>. Values are normalised 0–1 relative to the path's total length.
+</p>
+<pre><code>&lt;svg viewBox="0 0 200 200"&gt;
+    &lt;Motion Tag="path"
+            d="M10 100 Q100 20 190 100"
+            stroke="#6c47ff" stroke-width="4" fill="none"
+            Initial="@@(new AnimationProps { PathLength = 0 })"
+            Animate="@@(new AnimationProps  { PathLength = 1 })"
+            Transition="@@(new TransitionConfig { Duration = 1.5, Ease = Easing.EaseInOut })" /&gt;
+&lt;/svg&gt;</code></pre>
+
+<div class="demo-area" style="display:flex;flex-direction:column;align-items:center;gap:1rem;">
+    <svg viewBox="0 0 220 120" style="width:220px;height:120px;overflow:visible;">
+        <Motion @key="_replayKey7"
+                Tag="path"
+                d="M10 60 C60 10, 160 10, 210 60"
+                stroke="#6c47ff" stroke-width="4" fill="none" stroke-linecap="round"
+                Initial="@(new AnimationProps { PathLength = 0 })"
+                Animate="@(new AnimationProps  { PathLength = 1 })"
+                Transition="@(new TransitionConfig { Duration = 1.4, Ease = Easing.EaseInOut })" />
+    </svg>
+    <button class="demo-button" @onclick="Replay7">&#9654; Replay</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>Animation events</h2>
+<p>BlazorMotion fires <code>EventCallback</code>s at key points in the animation lifecycle:</p>
+<pre><code>&lt;Motion Initial="@@(new AnimationProps { Opacity = 0 })"
+        Animate="@@(new AnimationProps  { Opacity = 1 })"
+        OnAnimationStart="@@HandleStart"
+        OnAnimationComplete="@@HandleComplete"&gt;
+    ...
+&lt;/Motion&gt;
+
+@@code {
+    void HandleStart()    =&gt; Console.WriteLine("animation started");
+    void HandleComplete() =&gt; Console.WriteLine("animation done");
+}</code></pre>
+
+<table class="prop-table">
+    <thead><tr><th>Event</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>OnAnimationStart</td><td>Fires when a new animation begins (including re-triggers).</td></tr>
+        <tr><td>OnAnimationComplete</td><td>Fires when the animation reaches its target (not fired for infinite repeats).</td></tr>
+    </tbody>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>Exit animations</h2>
+<p>
+    Wrap conditional elements in <code>&lt;AnimatePresence&gt;</code> and add an <code>Exit</code>
+    prop to animate elements as they are removed from the DOM.
+</p>
+<pre><code>&lt;AnimatePresence&gt;
+    @@if (show)
+    {
+        &lt;Motion Initial="@@(new AnimationProps { Opacity = 0, Y = -20 })"
+                Animate="@@(new AnimationProps  { Opacity = 1, Y = 0 })"
+                Exit="@@(new AnimationProps     { Opacity = 0, Y = 20 })"
+                Transition="@@(new TransitionConfig { Duration = 0.3 })"&gt;
+            I animate in and out
+        &lt;/Motion&gt;
+    }
+&lt;/AnimatePresence&gt;</code></pre>
+
+<p>See <a href="/docs/animate-presence">AnimatePresence</a> for the full reference.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>Variants</h2>
+<p>
+    Define named animation states in a <code>MotionVariants</code> dictionary and switch between
+    them with a string key. Variants can also propagate to children to enable staggered list
+    animations.
+</p>
+<pre><code>@@code {
+    readonly MotionVariants _variants = new()
+    {
+        ["hidden"]  = new AnimationProps { Opacity = 0, Y = 20 },
+        ["visible"] = new AnimationProps { Opacity = 1, Y = 0  }
+    };
+    string _state = "hidden";
+}
+
+&lt;Motion Variants="@@_variants"
+        VariantKey="@@_state"
+        Transition="@@(new TransitionConfig { Type = TransitionType.Spring })"&gt;
+    @@_state
+&lt;/Motion&gt;
+
+&lt;button @@onclick="@@(() =&gt; _state = "visible")"&gt;Show&lt;/button&gt;</code></pre>
+
+<p>See <a href="/docs/variants">Variants</a> for the full reference including stagger and propagation.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
 <h2>AnimationProps reference</h2>
 <table class="prop-table">
     <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
     <tbody>
+        <tr><td colspan="3" style="font-weight:600;background:var(--bg-nav)">Transforms</td></tr>
         <tr><td>X</td><td>double?</td><td>Translate on X axis (px)</td></tr>
         <tr><td>Y</td><td>double?</td><td>Translate on Y axis (px)</td></tr>
+        <tr><td>Z</td><td>double?</td><td>Translate on Z axis (px, requires perspective)</td></tr>
         <tr><td>Scale</td><td>double?</td><td>Uniform scale</td></tr>
         <tr><td>ScaleX</td><td>double?</td><td>Scale on X axis</td></tr>
         <tr><td>ScaleY</td><td>double?</td><td>Scale on Y axis</td></tr>
-        <tr><td>Rotate</td><td>double?</td><td>Rotation in degrees</td></tr>
+        <tr><td>Rotate</td><td>double?</td><td>Rotation around Z axis (degrees)</td></tr>
+        <tr><td>RotateX</td><td>double?</td><td>3-D rotation around X axis (degrees)</td></tr>
+        <tr><td>RotateY</td><td>double?</td><td>3-D rotation around Y axis (degrees)</td></tr>
+        <tr><td>RotateZ</td><td>double?</td><td>Alias for Rotate</td></tr>
+        <tr><td>SkewX</td><td>double?</td><td>Skew on X axis (degrees)</td></tr>
+        <tr><td>SkewY</td><td>double?</td><td>Skew on Y axis (degrees)</td></tr>
+        <tr><td>Perspective</td><td>double?</td><td>Perspective depth (px)</td></tr>
+        <tr><td colspan="3" style="font-weight:600;background:var(--bg-nav)">Visual</td></tr>
         <tr><td>Opacity</td><td>double?</td><td>0–1</td></tr>
-        <tr><td>Width</td><td>string?</td><td>CSS width value</td></tr>
-        <tr><td>Height</td><td>string?</td><td>CSS height value</td></tr>
-        <tr><td>Background</td><td>string?</td><td>CSS color (hex, rgb, hsl)</td></tr>
-        <tr><td>Color</td><td>string?</td><td>CSS color (hex, rgb, hsl)</td></tr>
+        <tr><td>BackgroundColor</td><td>string?</td><td>CSS color (hex, rgb, hsl, named)</td></tr>
+        <tr><td>Color</td><td>string?</td><td>Text color</td></tr>
+        <tr><td>BorderColor</td><td>string?</td><td>Border color</td></tr>
+        <tr><td>OutlineColor</td><td>string?</td><td>Outline color</td></tr>
+        <tr><td>Fill</td><td>string?</td><td>SVG fill color</td></tr>
+        <tr><td>Stroke</td><td>string?</td><td>SVG stroke color</td></tr>
+        <tr><td colspan="3" style="font-weight:600;background:var(--bg-nav)">Box model</td></tr>
+        <tr><td>Width</td><td>string?</td><td>CSS width (px, %, rem…)</td></tr>
+        <tr><td>Height</td><td>string?</td><td>CSS height</td></tr>
         <tr><td>BorderRadius</td><td>string?</td><td>CSS border-radius</td></tr>
-        <tr><td>Custom</td><td>Dictionary&lt;string,object&gt;?</td><td>Arbitrary CSS properties</td></tr>
+        <tr><td>BoxShadow</td><td>string?</td><td>CSS box-shadow</td></tr>
+        <tr><td colspan="3" style="font-weight:600;background:var(--bg-nav)">SVG drawing</td></tr>
+        <tr><td>PathLength</td><td>double?</td><td>0 = invisible, 1 = fully drawn stroke</td></tr>
+        <tr><td>PathOffset</td><td>double?</td><td>Offset along the stroke path (0–1)</td></tr>
+        <tr><td>PathSpacing</td><td>double?</td><td>Dash/gap spacing (0–1)</td></tr>
+        <tr><td colspan="3" style="font-weight:600;background:var(--bg-nav)">Advanced</td></tr>
+        <tr><td>CssVars</td><td>Dictionary&lt;string,string&gt;?</td><td>CSS custom properties — keys must start with <code>--</code></td></tr>
+        <tr><td>Keyframes</td><td>Dictionary&lt;string,object&gt;?</td><td>Per-property keyframe arrays (double[] or string[])</td></tr>
     </tbody>
 </table>
 
-<h2>Reactive animations</h2>
-<p>Bind <code>Animate</code> to component state to re-trigger animations on state changes:</p>
-<pre><code>@@code {
-    bool expanded = false;
-    AnimationProps BoxStyle =&gt; expanded
-        ? new AnimationProps { Width = "300px", Height = "300px", Scale = 1.1 }
-        : new AnimationProps { Width = "100px", Height = "100px", Scale = 1.0 };
-}
-
-&lt;Motion Tag="div"
-        Animate="@@BoxStyle"
-        Transition="@@(new TransitionConfig { Type = "spring" })"
-        @@onclick="@@(() =&gt; expanded = !expanded)" /&gt;</code></pre>
-
 <div class="callout callout-tip">
-    <strong>Tip:</strong> BlazorMotion runs all animation physics in C# (WebAssembly), with no external JS animation library — making it fully debuggable in .NET.
+    <strong>Tip:</strong> BlazorMotion runs all animation physics in C# (WebAssembly) — springs, tweens, inertia, and keyframes are fully debuggable in .NET with no external JS animation library.
 </div>
+
+@code {
+    // ─── Enter demos ──────────────────────────────────────────────────────────
+    private int _replayKey = 0;
+    private void Replay() => _replayKey++;
+
+    // ─── Multiple values demos ────────────────────────────────────────────────
+    private int _replayKey2 = 0;
+    private void Replay2() => _replayKey2++;
+
+    // ─── Transform demos ──────────────────────────────────────────────────────
+    private int _replayKey3 = 0;
+    private void Replay3() => _replayKey3++;
+
+    private readonly (string Label, AnimationProps Init, AnimationProps Anim)[] _transformDemos =
+    {
+        ("Slide X",  new AnimationProps { X = -60, Opacity = 0 }, new AnimationProps { X = 0, Opacity = 1 }),
+        ("Scale",    new AnimationProps { Scale = 0, Opacity = 0 }, new AnimationProps { Scale = 1, Opacity = 1 }),
+        ("Rotate",   new AnimationProps { Rotate = -90, Opacity = 0 }, new AnimationProps { Rotate = 0, Opacity = 1 }),
+        ("Skew",     new AnimationProps { SkewX = 30, Opacity = 0 }, new AnimationProps { SkewX = 0, Opacity = 1 }),
+    };
+
+    // ─── Color demos ──────────────────────────────────────────────────────────
+    private int _replayKey4 = 0;
+    private void Replay4() => _replayKey4++;
+
+    // ─── Reactive demo ────────────────────────────────────────────────────────
+    private bool _expanded = false;
+    private AnimationProps _reactiveStyle => _expanded
+        ? new AnimationProps { Width = "260px", Height = "100px", BorderRadius = "16px" }
+        : new AnimationProps { Width = "100px", Height = "100px", BorderRadius = "50%" };
+    private void ToggleExpanded() => _expanded = !_expanded;
+
+    // ─── Per-property transition demo ─────────────────────────────────────────
+    private int _replayKey5 = 0;
+    private void Replay5() => _replayKey5++;
+
+    // ─── Delay / stagger list demo ────────────────────────────────────────────
+    private int _replayKey6 = 0;
+    private void Replay6() => _replayKey6++;
+    private readonly string[] _listItems = { "First item", "Second item", "Third item", "Fourth item", "Fifth item" };
+
+    // ─── SVG path demo ────────────────────────────────────────────────────────
+    private int _replayKey7 = 0;
+    private void Replay7() => _replayKey7++;
+}
