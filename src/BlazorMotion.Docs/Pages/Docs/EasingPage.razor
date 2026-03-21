@@ -1,0 +1,57 @@
+@page "/docs/easing"
+
+<PageTitle>Easing — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / <span>Easing</span></div>
+<h1>Easing</h1>
+<p>Easing functions define the rate of change over a tween animation. Set via the <code>Ease</code> property of <code>TransitionConfig</code>.</p>
+
+<h2>Named easing functions</h2>
+<table class="prop-table">
+    <thead><tr><th>Name</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>linear</td><td>Constant speed throughout.</td></tr>
+        <tr><td>easeIn</td><td>Slow start, fast end.</td></tr>
+        <tr><td>easeOut</td><td>Fast start, slow end (most natural for exits).</td></tr>
+        <tr><td>easeInOut</td><td>Slow start and end (most natural for position changes).</td></tr>
+        <tr><td>circIn</td><td>Circular acceleration.</td></tr>
+        <tr><td>circOut</td><td>Circular deceleration.</td></tr>
+        <tr><td>circInOut</td><td>Circular in and out.</td></tr>
+        <tr><td>backIn</td><td>Slight overshoot backward before moving forward.</td></tr>
+        <tr><td>backOut</td><td>Overshoot past target then settle.</td></tr>
+        <tr><td>backInOut</td><td>Overshoot on both ends.</td></tr>
+        <tr><td>anticipate</td><td>Brief pullback then fast acceleration (combines backIn + easeOut).</td></tr>
+    </tbody>
+</table>
+
+<div class="demo-area" style="display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;">
+    @foreach (var (label, ease) in new (string, BlazorMotion.Models.Easing)[]
+    {
+        ("linear", BlazorMotion.Models.Easing.Linear), ("easeIn", BlazorMotion.Models.Easing.EaseIn), ("easeOut", BlazorMotion.Models.Easing.EaseOut),
+        ("easeInOut", BlazorMotion.Models.Easing.EaseInOut), ("backOut", BlazorMotion.Models.Easing.BackOut), ("anticipate", BlazorMotion.Models.Easing.Anticipate)
+    })
+    {
+        <div style="display:flex;flex-direction:column;align-items:center;gap:0.4rem;">
+            <Motion Class="demo-box"
+                    Initial="@(new AnimationProps { X = -50 })"
+                    Animate="@(new AnimationProps { X = 50 })"
+                    Transition="@(new TransitionConfig { Duration = 1.2, Ease = ease, Repeat = int.MaxValue, RepeatType = RepeatType.Reverse })">
+            </Motion>
+            <span style="font-size:0.7rem;color:var(--text-muted)">@label</span>
+        </div>
+    }
+</div>
+
+<h2>Custom cubic-bezier</h2>
+<p>Pass a CSS cubic-bezier string for precise control:</p>
+<pre><code>new TransitionConfig
+{
+    Ease     = "[0.17, 0.67, 0.83, 0.67]",  // JSON array string
+    Duration = 0.5
+}</code></pre>
+
+<h2>When to use easing vs. spring</h2>
+<p>
+    <strong>Easing (tween)</strong> is best for: opacity fades, color transitions, entrance animations with a defined duration.<br />
+    <strong>Spring</strong> is best for: drag release, interactive responses, natural-feeling position changes.
+</p>

@@ -1,0 +1,73 @@
+﻿@page "/"
+@layout BlazorMotion.Docs.Layout.MainLayout
+
+<PageTitle>BlazorMotion — Animation library for Blazor</PageTitle>
+
+<div class="home-hero">
+    <div class="badge">Production Ready</div>
+
+    <Motion Tag="h1"
+            Initial="@(new AnimationProps { Opacity = 0, Y = 30 })"
+            Animate="@(new AnimationProps { Opacity = 1, Y = 0 })"
+            Transition="@(TransitionConfig.BounceSpring(0.6, 0.3))">
+        The animation library<br />for <span style="color:var(--accent)">Blazor</span>
+    </Motion>
+
+    <Motion Tag="p"
+            Initial="@(new AnimationProps { Opacity = 0, Y = 20 })"
+            Animate="@(new AnimationProps { Opacity = 1, Y = 0 })"
+            Transition="@(new TransitionConfig { Type = TransitionType.Tween, Duration = 0.5, Delay = 0.2, Ease = Easing.EaseOut })">
+        A production-ready animation engine for Blazor WebAssembly — spring physics,
+        gesture support, layout animations, and SVG path drawing. All math runs in
+        C# WASM; JS is only a thin DOM bridge.
+    </Motion>
+
+    <div class="ctas">
+        <Motion Tag="a" href="/docs/quick-start"
+                Class="btn btn-primary"
+                WhileHover="@(new AnimationProps { Scale = 1.03 })"
+                WhileTap="@(new AnimationProps { Scale = 0.97 })"
+                Transition="@(TransitionConfig.Spring(400, 30))">
+            Get started →
+        </Motion>
+        <Motion Tag="a" href="/docs/motion-component"
+                Class="btn btn-ghost"
+                WhileHover="@(new AnimationProps { Scale = 1.03 })"
+                WhileTap="@(new AnimationProps { Scale = 0.97 })"
+                Transition="@(TransitionConfig.Spring(400, 30))">
+            API Reference
+        </Motion>
+    </div>
+
+    <div class="feature-grid" style="margin-top:4rem; text-align:left; width:100%; max-width:860px;">
+        @foreach (var f in _features)
+        {
+            <Motion Class="feature-card"
+                    WhileHover="@(new AnimationProps { Y = -4 })"
+                    Transition="@(TransitionConfig.Spring(300, 25))">
+                <h3>@f.Title</h3>
+                <p>@f.Desc</p>
+            </Motion>
+        }
+    </div>
+</div>
+
+@code {
+    record Feature(string Title, string Desc);
+    readonly Feature[] _features =
+    [
+        new("Spring Physics",       "Configurable stiffness, damping, mass — or use the intuitive Bounce + Duration shorthand."),
+        new("Gesture Animations",   "whileHover, whileTap, whileFocus, whileDrag, whileInView with full event callbacks."),
+        new("Variants",             "Named animation states that propagate through children with stagger support."),
+        new("AnimatePresence",      "Choreograph enter and exit animations including ExitBeforeEnter mode."),
+        new("Layout Animations",    "FLIP-based smooth transitions when elements change size or position."),
+        new("Scroll Tracking",      "Bind animation progress to scroll position with offset control."),
+        new("SVG Path Drawing",     "pathLength / pathOffset / pathSpacing for line-drawing animations."),
+        new("MotionValue",          "Reactive values with transform pipelines that bypass React-style re-renders."),
+        new("CSS Variables",        "Animate --css-custom-properties across browsers."),
+        new("Drag & Pan",           "Constrained drag with elasticity, momentum, snap-to-origin, and direction lock."),
+        new("HSL Color Support",    "Interpolate between any CSS color format including hsl() and hsla()."),
+        new("Zero JS Animation",    "All math — spring, tween, inertia, easing, color — runs in C# WebAssembly."),
+    ];
+}
+

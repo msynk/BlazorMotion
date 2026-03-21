@@ -1,3 +1,4 @@
+using BlazorMotion.Models;
 using Microsoft.JSInterop;
 
 namespace BlazorMotion.Interop;
@@ -66,7 +67,12 @@ public sealed class MotionInterop : IAsyncDisposable
 
     public async ValueTask ObserveViewportAsync<T>(
         string elementId, DotNetObjectReference<T> dotnetRef, bool once) where T : class
-        => await (await Module()).InvokeVoidAsync("observeViewport", elementId, dotnetRef, once);
+        => await (await Module()).InvokeVoidAsync("observeViewport", elementId, dotnetRef,
+               new Dictionary<string, object?> { ["once"] = once, ["margin"] = "0px", ["threshold"] = 0.0 });
+
+    public async ValueTask ObserveViewportWithOptionsAsync<T>(
+        string elementId, DotNetObjectReference<T> dotnetRef, ViewportOptions options) where T : class
+        => await (await Module()).InvokeVoidAsync("observeViewport", elementId, dotnetRef, options.ToJsObject());
 
     public async ValueTask UnobserveViewportAsync(string elementId)
     {

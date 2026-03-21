@@ -1,0 +1,60 @@
+@page "/docs/layout-animations"
+
+<PageTitle>Layout Animations — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / <span>Layout Animations</span></div>
+<h1>Layout Animations</h1>
+<p>BlazorMotion detects layout changes (size, position) and smoothly animates between them using the FLIP technique — no manual tweening required.</p>
+
+<h2>Enable layout animation</h2>
+<pre><code>&lt;Motion Tag="div" Layout="true"
+        Transition="@@(new TransitionConfig { Type = "spring", Stiffness = 300, Damping = 30 })"&gt;
+    Content whose layout may change
+&lt;/Motion&gt;</code></pre>
+
+<h2>How FLIP works</h2>
+<p><strong>FLIP</strong> (First, Last, Invert, Play) is a technique that:
+<ol>
+    <li><strong>First</strong> — records the element's current position/size</li>
+    <li><strong>Last</strong> — lets the DOM update to its new layout</li>
+    <li><strong>Invert</strong> — applies an inverse transform to snap it back visually</li>
+    <li><strong>Play</strong> — animates the inverse transform to zero, creating the illusion of smooth movement</li>
+</ol>
+</p>
+
+<h2>Expanding content demo</h2>
+<div class="demo-area" style="display:flex;gap:1rem;flex-direction:column;align-items:center;">
+    <button class="demo-button" @onclick="Toggle">Toggle size</button>
+    <Motion Class="demo-box" Layout="true"
+            Transition="@(new TransitionConfig { Type = TransitionType.Spring, Stiffness = 300, Damping = 30 })"
+            Style="@(_expanded ? "width:280px;height:100px;padding:1rem;" : "width:100px;height:80px;")">
+        @(_expanded ? "Expanded content" : "Box")
+    </Motion>
+</div>
+
+<h2>LayoutOptions</h2>
+<table class="prop-table">
+    <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>LayoutId</td><td>string?</td><td>Shared layout ID for cross-component transitions (hero animations).</td></tr>
+    </tbody>
+</table>
+
+<h2>Shared layout (hero animations)</h2>
+<p>Use the same <code>LayoutId</code> on two elements in different states to animate the "hero element" between states:</p>
+<pre><code>&lt;!-- List view --&gt;
+&lt;Motion Layout="true" LayoutOptions="@@(new LayoutOptions { LayoutId = "card-1" })"
+        Class="small-card" /&gt;
+
+&lt;!-- Detail view --&gt;
+&lt;Motion Layout="true" LayoutOptions="@@(new LayoutOptions { LayoutId = "card-1" })"
+        Class="detail-card" /&gt;</code></pre>
+
+<div class="callout callout-tip">
+    <strong>Tip:</strong> Layout animations work best with <code>Type = "spring"</code> for natural, responsive feel.
+</div>
+
+@code {
+    bool _expanded;
+    void Toggle() => _expanded = !_expanded;
+}

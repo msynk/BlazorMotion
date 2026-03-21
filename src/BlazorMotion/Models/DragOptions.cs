@@ -31,6 +31,19 @@ public class DragOptions
     /// </summary>
     public TransitionConfig? SnapTransition { get; set; }
 
+    /// <summary>
+    /// If true, the draggable element will spring back to its center (origin) when released.
+    /// Default: false.
+    /// </summary>
+    public bool SnapToOrigin { get; set; }
+
+    /// <summary>
+    /// Locks drag to the dominant movement axis once detected.
+    /// For example, moving mostly horizontally will lock drag to x only.
+    /// Default: false.
+    /// </summary>
+    public bool DirectionLock { get; set; }
+
     internal object ToJsObject()
     {
         var d = new Dictionary<string, object?>
@@ -46,6 +59,9 @@ public class DragOptions
 
         if (SnapTransition != null)
             d["dragSnapTransition"] = SnapTransition.ToJsObject();
+
+        if (SnapToOrigin) d["dragSnapToOrigin"] = true;
+        if (DirectionLock) d["dragDirectionLock"] = true;
 
         return d;
     }

@@ -1,0 +1,92 @@
+@page "/docs/keyframes"
+
+<PageTitle>Keyframes — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / <span>Keyframes</span></div>
+<h1>Keyframes</h1>
+<p>Animate a value through a sequence of values by setting keyframe arrays in <code>AnimationProps.Keyframes</code> and using <code>TransitionType.Keyframes</code>.</p>
+
+<h2>Usage</h2>
+<pre><code>&lt;Motion Tag="div"
+        Animate="@@(new AnimationProps
+        {
+            Keyframes = new Dictionary&lt;string, object&gt;
+            {
+                ["scale"] = new double[] { 1.0, 1.3, 0.9, 1.1, 1.0 }
+            }
+        })"
+        Transition="@@(new TransitionConfig
+        {
+            Type     = TransitionType.Keyframes,
+            Times    = new[] { 0.0, 0.2, 0.5, 0.7, 1.0 },
+            Duration = 0.8,
+            Ease     = Easing.EaseInOut
+        })" /&gt;</code></pre>
+
+<div class="demo-area" style="display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+        <Motion Class="demo-box"
+                Animate="@(new AnimationProps
+                {
+                    Keyframes = new Dictionary<string, object>
+                    {
+                        ["scale"] = new double[] { 1.0, 1.4, 0.8, 1.1, 1.0 }
+                    }
+                })"
+                Transition="@(new TransitionConfig
+                {
+                    Type       = TransitionType.Keyframes,
+                    Times      = new[] { 0.0, 0.2, 0.5, 0.7, 1.0 },
+                    Duration   = 0.8,
+                    Repeat     = int.MaxValue,
+                    RepeatType = RepeatType.Loop
+                })">
+            Pulse
+        </Motion>
+        <span style="font-size:0.75rem;color:var(--text-muted)">Scale keyframes</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+        <Motion Class="demo-box"
+                Animate="@(new AnimationProps
+                {
+                    Keyframes = new Dictionary<string, object>
+                    {
+                        ["rotate"] = new double[] { 0.0, -15.0, 15.0, -10.0, 10.0, 0.0 }
+                    }
+                })"
+                Transition="@(new TransitionConfig
+                {
+                    Type       = TransitionType.Keyframes,
+                    Duration   = 0.6,
+                    Repeat     = int.MaxValue,
+                    RepeatType = RepeatType.Loop
+                })">
+            Shake
+        </Motion>
+        <span style="font-size:0.75rem;color:var(--text-muted)">Rotate keyframes</span>
+    </div>
+</div>
+
+<h2>API</h2>
+<p>Keyframe values live in <code>AnimationProps.Keyframes</code> — a <code>Dictionary&lt;string, object&gt;</code> where keys match CSS property names and values are <code>double[]</code> (numeric) or <code>string[]</code> (color):</p>
+<pre><code>new AnimationProps
+{
+    Keyframes = new Dictionary&lt;string, object&gt;
+    {
+        ["scale"]           = new double[] { 1, 1.4, 0.8, 1 },
+        ["backgroundColor"] = new string[] { "#6c47ff", "#ff4785", "#6c47ff" }
+    }
+}</code></pre>
+
+<h2>TransitionConfig keyframe properties</h2>
+<table class="prop-table">
+    <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>Type</td><td>TransitionType</td><td>Must be <code>TransitionType.Keyframes</code>.</td></tr>
+        <tr><td>Times</td><td>double[]?</td><td>Relative timestamps (0–1) for each value. Evenly distributed if omitted.</td></tr>
+        <tr><td>Duration</td><td>double</td><td>Total duration in seconds.</td></tr>
+        <tr><td>Repeat</td><td>int</td><td>Number of iterations (use int.MaxValue for infinite).</td></tr>
+        <tr><td>RepeatType</td><td>RepeatType</td><td>Loop | Mirror | Reverse.</td></tr>
+        <tr><td>Ease</td><td>Easing</td><td>Easing applied over each keyframe interval.</td></tr>
+    </tbody>
+</table>

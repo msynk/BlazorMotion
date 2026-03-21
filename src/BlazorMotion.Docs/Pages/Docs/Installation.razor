@@ -1,0 +1,47 @@
+@page "/docs/installation"
+
+<PageTitle>Installation — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / Getting Started / <span>Installation</span></div>
+<h1>Installation</h1>
+
+<h2>Requirements</h2>
+<ul>
+    <li>.NET 8, 9, or 10</li>
+    <li>Blazor WebAssembly or Blazor Server</li>
+</ul>
+
+<h2>Add the package</h2>
+<p>Reference the project or NuGet package:</p>
+<pre><code>&lt;!-- .csproj --&gt;
+&lt;PackageReference Include="BlazorMotion" Version="1.*" /&gt;</code></pre>
+
+<h2>Register services</h2>
+<pre><code>// Program.cs
+using BlazorMotion.Extensions;
+
+builder.Services.AddBlazorMotion();</code></pre>
+
+<h2>Add imports</h2>
+<pre><code>// _Imports.razor
+@@using BlazorMotion.Components
+@@using BlazorMotion.Models
+@@using BlazorMotion.Services</code></pre>
+
+<h2>Add JS interop script</h2>
+<p>In your <code>index.html</code> (WASM) or <code>_Host.cshtml</code> (Server), before the closing <code>&lt;/body&gt;</code>:</p>
+<pre><code>&lt;script src="_content/BlazorMotion/blazor-motion.js"&gt;&lt;/script&gt;</code></pre>
+
+<div class="callout callout-tip">
+    <strong>Note:</strong> BlazorMotion's JS file is lightweight (~15KB unminified). It only handles DOM mutation — all animation math runs in C# WASM.
+</div>
+
+<h2>Verify</h2>
+<pre><code>&lt;Motion Tag="div"
+        Initial="@@(new AnimationProps { Opacity = 0 })"
+        Animate="@@(new AnimationProps  { Opacity = 1 })"
+        Transition="@@(new TransitionConfig { Duration = 0.5 })"&gt;
+    If you can see this fading in, BlazorMotion is working! ✓
+&lt;/Motion&gt;</code></pre>
+
+<p>Continue with <a href="/docs/quick-start">Quick Start</a> or jump to the <a href="/docs/motion-component">Motion component API</a>.</p>

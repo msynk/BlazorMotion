@@ -1,0 +1,45 @@
+@page "/docs/tap"
+
+<PageTitle>Tap — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / Gestures / <span>Tap</span></div>
+<h1>Tap</h1>
+<p>Animate while an element is being pressed. Works for mouse, touch, and keyboard activation.</p>
+
+<h2>Usage</h2>
+<pre><code>&lt;Motion Tag="button"
+        WhileTap="@@(new AnimationProps { Scale = 0.95 })"
+        Transition="@@(new TransitionConfig { Type = "spring", Stiffness = 400, Damping = 17 })"&gt;
+    Press me
+&lt;/Motion&gt;</code></pre>
+
+<div class="demo-area" style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
+    <Motion Tag="button" Class="demo-box"
+            WhileTap="@(new AnimationProps { Scale = 0.88 })"
+            Transition="@(new TransitionConfig { Type = TransitionType.Spring, Stiffness = 400, Damping = 17 })">
+        Press me
+    </Motion>
+    <Motion Class="demo-box"
+            WhileTap="@(new AnimationProps { Rotate = 10, Scale = 0.9 })"
+            Transition="@(new TransitionConfig { Type = TransitionType.Spring, Stiffness = 300, Damping = 12 })">
+        Rotate tap
+    </Motion>
+</div>
+
+<h2>Events</h2>
+<table class="prop-table">
+    <thead><tr><th>Event</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>OnTapStart</td><td>Pointer pressed down on element.</td></tr>
+        <tr><td>OnTap</td><td>Pointer released on element (successful tap).</td></tr>
+        <tr><td>OnTapCancel</td><td>Pointer moved away before release.</td></tr>
+    </tbody>
+</table>
+
+<h2>Combined with hover</h2>
+<pre><code>&lt;Motion Tag="button"
+        WhileHover="@@(new AnimationProps { Scale = 1.05 })"
+        WhileTap="@@(new AnimationProps   { Scale = 0.95 })"
+        Transition="@@(new TransitionConfig { Type = "spring", Stiffness = 400, Damping = 17 })"&gt;
+    Button
+&lt;/Motion&gt;</code></pre>

@@ -2,7 +2,7 @@ namespace BlazorMotion.Engine;
 
 /// <summary>
 /// Pure-C# RGBA color parsing and linear interpolation.
-/// Handles #hex, rgb(), and rgba() formats.
+/// Handles #hex, rgb(), rgba(), hsl(), and hsla() formats.
 /// </summary>
 internal static class ColorInterpolator
 {
@@ -62,6 +62,36 @@ internal static class ColorInterpolator
                 m.Groups[4].Success ? double.Parse(m.Groups[4].Value) : 1.0,
             ];
         }
+
+        // hsl() / hsla()
+        var mh = System.Text.RegularExpressions.Regex.Match(
+            c, @"hsla?\(\s*([\d.]+)\s*,\s*([\d.]+)%?\s*,\s*([\d.]+)%?(?:\s*,\s*([\d.]+))?\s*\)");
+        if (mh.Success)
+        {
+            double h2  = double.Parse(mh.Groups[1].Value);
+            double s2  = double.Parse(mh.Groups[2].Value) / 100.0;
+            double l2  = double.Parse(mh.Groups[3].Value) / 100.0;
+            double a2  = mh.Groups[4].Success ? double.Parse(mh.Groups[4].Value) : 1.0;
+            var rgb2 = HslToRgb(h2, s2, l2);
+            return [rgb2[0], rgb2[1], rgb2[2], a2];
+        }
+
         return null;
+    }
+
+    private static double[] HslToRgb(double h, double s, double l)
+    {
+        h = ((h % 360) + 360) % 360; // normalise to 0-360
+        double c = (1 - Math.Abs(2 * l - 1)) * s;
+        double x = c * (1 - Math.Abs((h / 60) % 2 - 1));
+        double m = l - c / 2;
+        double r, g, b;
+        if      (h < 60)  { r = c; g = x; b = 0; }
+        else if (h < 120) { r = x; g = c; b = 0; }
+        else if (h < 180) { r = 0; g = c; b = x; }
+        else if (h < 240) { r = 0; g = x; b = c; }
+        else if (h < 300) { r = x; g = 0; b = c; }
+        else              { r = c; g = 0; b = x; }
+        return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
     }
 }

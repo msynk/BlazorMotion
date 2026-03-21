@@ -1,0 +1,68 @@
+@page "/docs/animate"
+
+<PageTitle>Animate — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / <span>Animate</span></div>
+<h1>Animate</h1>
+<p>Animate elements by setting values on the <code>Animate</code> parameter. BlazorMotion automatically transitions from <code>Initial</code> to <code>Animate</code> on mount, and re-animates whenever <code>Animate</code> changes.</p>
+
+<h2>Basic animation</h2>
+<pre><code>&lt;Motion Tag="div"
+        Animate="@@(new AnimationProps { X = 100 })"&gt;
+    Slides right
+&lt;/Motion&gt;</code></pre>
+
+<h2>Multiple values</h2>
+<p>Animate any combination of transform, opacity, and color properties simultaneously:</p>
+<pre><code>&lt;Motion Tag="div"
+        Initial="@@(new AnimationProps { Opacity = 0, Scale = 0.5, Y = -20 })"
+        Animate="@@(new AnimationProps  { Opacity = 1, Scale = 1,   Y = 0 })"
+        Transition="@@(new TransitionConfig { Duration = 0.4, Ease = "easeOut" })"&gt;
+&lt;/Motion&gt;</code></pre>
+
+<div class="demo-area">
+    <Motion Class="demo-box"
+            Initial="@(new AnimationProps { Opacity = 0, Y = 30 })"
+            Animate="@(new AnimationProps { Opacity = 1, Y = 0 })"
+            Transition="@(new TransitionConfig { Duration = 0.6, Ease = BlazorMotion.Models.Easing.EaseOut })">
+        Fade up
+    </Motion>
+</div>
+
+<h2>AnimationProps reference</h2>
+<table class="prop-table">
+    <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>X</td><td>double?</td><td>Translate on X axis (px)</td></tr>
+        <tr><td>Y</td><td>double?</td><td>Translate on Y axis (px)</td></tr>
+        <tr><td>Scale</td><td>double?</td><td>Uniform scale</td></tr>
+        <tr><td>ScaleX</td><td>double?</td><td>Scale on X axis</td></tr>
+        <tr><td>ScaleY</td><td>double?</td><td>Scale on Y axis</td></tr>
+        <tr><td>Rotate</td><td>double?</td><td>Rotation in degrees</td></tr>
+        <tr><td>Opacity</td><td>double?</td><td>0–1</td></tr>
+        <tr><td>Width</td><td>string?</td><td>CSS width value</td></tr>
+        <tr><td>Height</td><td>string?</td><td>CSS height value</td></tr>
+        <tr><td>Background</td><td>string?</td><td>CSS color (hex, rgb, hsl)</td></tr>
+        <tr><td>Color</td><td>string?</td><td>CSS color (hex, rgb, hsl)</td></tr>
+        <tr><td>BorderRadius</td><td>string?</td><td>CSS border-radius</td></tr>
+        <tr><td>Custom</td><td>Dictionary&lt;string,object&gt;?</td><td>Arbitrary CSS properties</td></tr>
+    </tbody>
+</table>
+
+<h2>Reactive animations</h2>
+<p>Bind <code>Animate</code> to component state to re-trigger animations on state changes:</p>
+<pre><code>@@code {
+    bool expanded = false;
+    AnimationProps BoxStyle =&gt; expanded
+        ? new AnimationProps { Width = "300px", Height = "300px", Scale = 1.1 }
+        : new AnimationProps { Width = "100px", Height = "100px", Scale = 1.0 };
+}
+
+&lt;Motion Tag="div"
+        Animate="@@BoxStyle"
+        Transition="@@(new TransitionConfig { Type = "spring" })"
+        @@onclick="@@(() =&gt; expanded = !expanded)" /&gt;</code></pre>
+
+<div class="callout callout-tip">
+    <strong>Tip:</strong> BlazorMotion runs all animation physics in C# (WebAssembly), with no external JS animation library — making it fully debuggable in .NET.
+</div>

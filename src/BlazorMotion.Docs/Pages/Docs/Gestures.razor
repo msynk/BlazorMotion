@@ -1,0 +1,59 @@
+@page "/docs/gestures"
+
+<PageTitle>Gestures — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / <span>Gestures</span></div>
+<h1>Gestures</h1>
+<p>BlazorMotion provides a set of high-level gesture recognisers — hover, tap, drag, pan, and focus — that trigger declarative animations and C# event callbacks.</p>
+
+<h2>Overview</h2>
+<table class="prop-table">
+    <thead><tr><th>Gesture</th><th>While prop</th><th>Events</th></tr></thead>
+    <tbody>
+        <tr><td><a href="/docs/hover">Hover</a></td><td>WhileHover</td><td>OnHoverStart, OnHoverEnd</td></tr>
+        <tr><td><a href="/docs/tap">Tap</a></td><td>WhileTap</td><td>OnTapStart, OnTap, OnTapCancel</td></tr>
+        <tr><td><a href="/docs/focus">Focus</a></td><td>WhileFocus</td><td>—</td></tr>
+        <tr><td><a href="/docs/drag">Drag</a></td><td>WhileDrag</td><td>OnDragStart, OnDrag, OnDragEnd</td></tr>
+        <tr><td><a href="/docs/pan">Pan</a></td><td>—</td><td>OnPanStart, OnPan, OnPanEnd</td></tr>
+    </tbody>
+</table>
+
+<h2>While-props</h2>
+<p>All gesture <code>While*</code> props accept an <code>AnimationProps</code>. BlazorMotion smoothly transitions to that state on gesture start, and back to <code>Animate</code> on end:</p>
+<pre><code>&lt;Motion Tag="button"
+        WhileHover="@@(new AnimationProps { Scale = 1.05 })"
+        WhileTap="@@(new AnimationProps   { Scale = 0.95 })"
+        Transition="@@(new TransitionConfig { Type = "spring", Stiffness = 400, Damping = 17 })"&gt;
+    Click me
+&lt;/Motion&gt;</code></pre>
+
+<div class="demo-area" style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
+    <Motion Tag="button" Class="demo-box"
+            WhileHover="@(new AnimationProps { Scale = 1.1, BackgroundColor = "#7c3aed" })"
+            WhileTap="@(new AnimationProps   { Scale = 0.92 })"
+            Transition="@(new TransitionConfig { Type = TransitionType.Spring, Stiffness = 400, Damping = 17 })">
+        Hover + Tap
+    </Motion>
+    <Motion Class="demo-box"
+            WhileHover="@(new AnimationProps { Rotate = 15, Scale = 1.1 })"
+            Transition="@(new TransitionConfig { Type = TransitionType.Spring, Stiffness = 300, Damping = 10 })">
+        Rotate on Hover
+    </Motion>
+</div>
+
+<h2>Event callbacks</h2>
+<p>Gesture events fire C# <code>EventCallback</code>s that you can handle normally in @@code:</p>
+<pre><code>&lt;Motion WhileHover="@@(new AnimationProps { Scale = 1.05 })"
+        OnHoverStart="@@HandleHoverStart"
+        OnTap="@@HandleTap"&gt;
+    Interactive
+&lt;/Motion&gt;
+
+@@code {
+    void HandleHoverStart() =&gt; Console.WriteLine("hover start");
+    void HandleTap()        =&gt; Console.WriteLine("tapped!");
+}</code></pre>
+
+<div class="callout callout-tip">
+    <strong>Tip:</strong> Gesture <em>While</em> animations stack. An element with <code>WhileHover</code> and <code>WhileTap</code> will merge both transforms while being tapped while hovered.
+</div>

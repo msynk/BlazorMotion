@@ -58,6 +58,20 @@ public class TransitionConfig
     /// <summary>Minimum distance from target considered at rest. Default: 0.01.</summary>
     public double RestDelta { get; set; } = 0.01;
 
+    /// <summary>
+    /// Bounciness of a duration-based spring (0 = critically damped, 1 = very bouncy).
+    /// When set together with <see cref="Duration"/> or <see cref="VisualDuration"/>,
+    /// stiffness and damping are derived automatically (overriding their values).
+    /// </summary>
+    public double? Bounce { get; set; }
+
+    /// <summary>
+    /// The visual time (in seconds) the spring will take to appear to reach its target.
+    /// Works together with <see cref="Bounce"/> for intuitive spring configuration.
+    /// Overrides <see cref="Duration"/> when computing spring parameters.
+    /// </summary>
+    public double? VisualDuration { get; set; }
+
     // ── Inertia ───────────────────────────────────────────────────────────────
     /// <summary>Velocity at the start of deceleration. Default: 0.</summary>
     public double InertiaVelocity { get; set; } = 0;
@@ -95,6 +109,12 @@ public class TransitionConfig
     /// <c>Properties = new { ["opacity"] = new TransitionConfig { Duration = 0.1 } }</c>
     /// </summary>
     public Dictionary<string, TransitionConfig>? Properties { get; set; }
+
+    /// <summary>
+    /// Called on every animation frame with the latest interpolated value.
+    /// Supported for single-value numeric animations.
+    /// </summary>
+    public Action<double>? OnUpdate { get; set; }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
     internal object ToJsObject()
@@ -158,11 +178,44 @@ public class TransitionConfig
     public static TransitionConfig Spring(double stiffness = 100, double damping = 10, double mass = 1)
         => new() { Type = TransitionType.Spring, Stiffness = stiffness, Damping = damping, Mass = mass };
 
+    /// <summary>
+    /// Duration-based spring using intuitive <paramref name="bounce"/> (0 = no bounce, 1 = very bouncy)
+    /// and <paramref name="duration"/> parameters. Stiffness and damping are derived automatically.
+    /// </summary>
+    public static TransitionConfig BounceSpring(double duration = 0.5, double bounce = 0.25, double mass = 1)
+    {
+        var (stiffness, damping) = SpringFromBounce(duration, bounce, mass);
+        return new()
+        {
+            Type = TransitionType.Spring,
+            Duration = duration,
+            Bounce = bounce,
+            VisualDuration = duration,
+            Stiffness = stiffness,
+            Damping = damping,
+            Mass = mass,
+        };
+    }
+
     public static TransitionConfig Tween(double duration = 0.3, Easing ease = Easing.EaseOut)
         => new() { Type = TransitionType.Tween, Duration = duration, Ease = ease };
 
     public static TransitionConfig Inertia(double velocity = 0, double timeConstant = 700)
         => new() { Type = TransitionType.Inertia, InertiaVelocity = velocity, TimeConstant = timeConstant };
+
+    /// <summary>
+    /// Derives <c>(stiffness, damping)</c> from Framer-Motion-compatible <paramref name="bounce"/>
+    /// (0–1) and <paramref name="visualDuration"/> parameters.
+    /// </summary>
+    internal static (double stiffness, double damping) SpringFromBounce(
+        double visualDuration, double bounce, double mass = 1)
+    {
+        double b = Math.Clamp(bounce, 0.0, 1.0);
+        double omega0 = (2.0 * Math.PI) / Math.Max(visualDuration, 0.001);
+        // damping ratio: 0 → fully elastic (bounce=1), 1 → critically damped (bounce=0)
+        double zeta = b < 0.05 ? 1.0 : Math.Sqrt(1.0 - Math.Pow(b, 2.0 / 3.0));
+        return (Math.Max(omega0 * omega0 * mass, 0.001), Math.Max(2.0 * zeta * omega0 * mass, 0.001));
+    }
 }
 
 // ── Enumerations ──────────────────────────────────────────────────────────────

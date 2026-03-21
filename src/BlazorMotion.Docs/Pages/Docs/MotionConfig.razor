@@ -1,0 +1,41 @@
+@page "/docs/motion-config"
+
+<PageTitle>MotionConfig — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / <span>MotionConfig</span></div>
+<h1>MotionConfig</h1>
+<p><code>&lt;MotionConfig&gt;</code> sets default transition settings for all <code>&lt;Motion&gt;</code> descendants. Use it to apply consistent animation behaviour across sections of your app.</p>
+
+<h2>Usage</h2>
+<pre><code>&lt;MotionConfig Transition="@@(new TransitionConfig { Type = "spring", Stiffness = 200, Damping = 20 })"&gt;
+    &lt;!-- All Motion children use spring by default --&gt;
+    &lt;Motion Animate="@@(new AnimationProps { X = 100 })" /&gt;
+    &lt;Motion Animate="@@(new AnimationProps { Scale = 1.2 })" /&gt;
+&lt;/MotionConfig&gt;</code></pre>
+
+<h2>Reduce motion</h2>
+<p>Respect the user's system preference for reduced motion with the <code>ReduceMotion</code> prop:</p>
+<pre><code>&lt;MotionConfig ReduceMotion="@@preferReducedMotion"&gt;
+    &lt;App /&gt;
+&lt;/MotionConfig&gt;
+
+@@code {
+    // Read from JS: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    bool preferReducedMotion = false;
+}</code></pre>
+
+<p>When <code>ReduceMotion</code> is true, all <code>&lt;Motion&gt;</code> children skip their animations and jump directly to their target state.</p>
+
+<h2>MotionConfig reference</h2>
+<table class="prop-table">
+    <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>Transition</td><td>TransitionConfig?</td><td>Default transition for all Motion descendants.</td></tr>
+        <tr><td>ReduceMotion</td><td>bool</td><td>Disable all animations for accessibility.</td></tr>
+        <tr><td>ChildContent</td><td>RenderFragment</td><td>Children to configure.</td></tr>
+    </tbody>
+</table>
+
+<div class="callout callout-tip">
+    <strong>Best practice:</strong> Wrap your entire app in a <code>&lt;MotionConfig&gt;</code> in your <code>MainLayout.razor</code> and check <code>prefers-reduced-motion</code> via JS interop on first render.
+</div>

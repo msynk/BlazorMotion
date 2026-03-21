@@ -1,0 +1,113 @@
+@page "/docs/motion-component"
+
+<PageTitle>Motion Component — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / <span>Motion Component</span></div>
+<h1>Motion Component</h1>
+<p>The <code>&lt;Motion&gt;</code> component is the core of BlazorMotion. Wrap any element with it to unlock animation, gestures, and viewport detection.</p>
+
+<h2>Basic usage</h2>
+<pre><code>&lt;Motion Tag="div" Animate="@@(new AnimationProps { X = 100 })"&gt;
+    content
+&lt;/Motion&gt;
+
+&lt;!-- Renders as: &lt;div style="transform: translateX(100px)"&gt;content&lt;/div&gt; --&gt;</code></pre>
+
+<h2>Parameters</h2>
+
+<h3>Core</h3>
+<table class="prop-table">
+    <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>Tag</td><td>string</td><td>HTML tag to render ("div", "span", "button", …). Default: "div"</td></tr>
+        <tr><td>Id</td><td>string?</td><td>HTML id. Auto-generated if omitted.</td></tr>
+        <tr><td>Class</td><td>string?</td><td>CSS class names.</td></tr>
+        <tr><td>Style</td><td>string?</td><td>Inline styles not managed by animation.</td></tr>
+        <tr><td>Initial</td><td>AnimationProps?</td><td>Starting state on mount.</td></tr>
+        <tr><td>Animate</td><td>AnimationProps?</td><td>Target animation state.</td></tr>
+        <tr><td>Exit</td><td>AnimationProps?</td><td>State when removed (requires AnimatePresence parent).</td></tr>
+        <tr><td>Transition</td><td>TransitionConfig?</td><td>How the animation plays.</td></tr>
+        <tr><td>ChildContent</td><td>RenderFragment?</td><td>Child content.</td></tr>
+    </tbody>
+</table>
+
+<h3>Gesture states</h3>
+<table class="prop-table">
+    <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>WhileHover</td><td>AnimationProps?</td><td>Animation while pointer is over element.</td></tr>
+        <tr><td>WhileTap</td><td>AnimationProps?</td><td>Animation while pointer is pressed.</td></tr>
+        <tr><td>WhileFocus</td><td>AnimationProps?</td><td>Animation while element has focus.</td></tr>
+        <tr><td>WhileDrag</td><td>AnimationProps?</td><td>Animation while dragging.</td></tr>
+        <tr><td>WhileInView</td><td>AnimationProps?</td><td>Animation while in the viewport.</td></tr>
+    </tbody>
+</table>
+
+<h3>Drag</h3>
+<table class="prop-table">
+    <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>Drag</td><td>bool</td><td>Enable drag gesture.</td></tr>
+        <tr><td>DragOptions</td><td>DragOptions?</td><td>Constraints, snap, direction lock.</td></tr>
+    </tbody>
+</table>
+
+<h3>Viewport</h3>
+<table class="prop-table">
+    <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>Once</td><td>bool</td><td>Play WhileInView animation only once.</td></tr>
+        <tr><td>Viewport</td><td>ViewportOptions?</td><td>Full viewport intersection options (margin, amount, once).</td></tr>
+    </tbody>
+</table>
+
+<h3>Variants</h3>
+<table class="prop-table">
+    <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>Variants</td><td>MotionVariants?</td><td>Named animation states.</td></tr>
+        <tr><td>VariantKey</td><td>string?</td><td>Active variant name.</td></tr>
+    </tbody>
+</table>
+
+<h3>Layout</h3>
+<table class="prop-table">
+    <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>Layout</td><td>bool</td><td>Enable FLIP layout animations.</td></tr>
+        <tr><td>LayoutOptions</td><td>LayoutOptions?</td><td>Layout animation configuration.</td></tr>
+    </tbody>
+</table>
+
+<h3>Events</h3>
+<table class="prop-table">
+    <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>OnAnimationStart</td><td>EventCallback</td><td>Fires when animation begins.</td></tr>
+        <tr><td>OnAnimationComplete</td><td>EventCallback</td><td>Fires when animation finishes.</td></tr>
+        <tr><td>OnHoverStart</td><td>EventCallback</td><td>Pointer enters element.</td></tr>
+        <tr><td>OnHoverEnd</td><td>EventCallback</td><td>Pointer leaves element.</td></tr>
+        <tr><td>OnTapStart</td><td>EventCallback</td><td>Pointer pressed down.</td></tr>
+        <tr><td>OnTap</td><td>EventCallback</td><td>Pointer released (tap complete).</td></tr>
+        <tr><td>OnTapCancel</td><td>EventCallback</td><td>Pointer left without releasing.</td></tr>
+        <tr><td>OnDragStart</td><td>EventCallback</td><td>Drag began.</td></tr>
+        <tr><td>OnDrag</td><td>EventCallback</td><td>Drag in progress.</td></tr>
+        <tr><td>OnDragEnd</td><td>EventCallback</td><td>Drag ended.</td></tr>
+        <tr><td>OnPanStart</td><td>EventCallback</td><td>Pan gesture began.</td></tr>
+        <tr><td>OnPan</td><td>EventCallback&lt;PanInfo&gt;</td><td>Pan in progress (position, delta, velocity).</td></tr>
+        <tr><td>OnPanEnd</td><td>EventCallback</td><td>Pan gesture ended.</td></tr>
+        <tr><td>OnViewportEnter</td><td>EventCallback</td><td>Element entered viewport.</td></tr>
+        <tr><td>OnViewportLeave</td><td>EventCallback</td><td>Element left viewport.</td></tr>
+    </tbody>
+</table>
+
+<div class="demo-area">
+    <Motion Class="demo-box"
+            Initial="@(new AnimationProps { Opacity = 0 })"
+            Animate="@(new AnimationProps { Opacity = 1 })"
+            WhileHover="@(new AnimationProps { Scale = 1.15 })"
+            WhileTap="@(new AnimationProps   { Scale = 0.9 })"
+            Transition="@(new TransitionConfig { Type = TransitionType.Spring, Stiffness = 400, Damping = 17 })">
+        Hover &amp; tap me
+    </Motion>
+</div>

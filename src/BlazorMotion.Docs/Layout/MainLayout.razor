@@ -1,0 +1,63 @@
+﻿@inherits LayoutComponentBase
+
+<header class="site-header">
+    <a class="logo" href="/">Blazor<span>Motion</span></a>
+    <nav>
+        <NavLink href="/docs/quick-start">Docs</NavLink>
+        <NavLink href="/docs/animate">API</NavLink>
+        <a href="https://github.com/msynk/BlazorMotion" target="_blank">GitHub</a>
+    </nav>
+</header>
+
+<div class="docs-shell">
+    <nav class="docs-sidebar">
+        <section>
+            <div class="section-label">Getting Started</div>
+            <NavLink href="/docs/quick-start" Match="NavLinkMatch.All">Quick Start</NavLink>
+            <NavLink href="/docs/installation">Installation</NavLink>
+        </section>
+
+        <section>
+            <div class="section-label">Animation</div>
+            <NavLink href="/docs/animate">animate</NavLink>
+            <NavLink href="/docs/transitions">Transitions</NavLink>
+            <NavLink href="/docs/keyframes">Keyframes</NavLink>
+        </section>
+
+        <section>
+            <div class="section-label">Components</div>
+            <NavLink href="/docs/motion-component">Motion component</NavLink>
+            <NavLink href="/docs/animate-presence">AnimatePresence</NavLink>
+            <NavLink href="/docs/motion-config">MotionConfig</NavLink>
+        </section>
+
+        <section>
+            <div class="section-label">Gestures</div>
+            <NavLink href="/docs/gestures">Gesture overview</NavLink>
+            <NavLink href="/docs/hover">Hover</NavLink>
+            <NavLink href="/docs/tap">Tap</NavLink>
+            <NavLink href="/docs/drag">Drag</NavLink>
+            <NavLink href="/docs/pan">Pan</NavLink>
+            <NavLink href="/docs/focus">Focus</NavLink>
+        </section>
+
+        <section>
+            <div class="section-label">Scroll</div>
+            <NavLink href="/docs/scroll">Scroll</NavLink>
+            <NavLink href="/docs/in-view">inView / WhileInView</NavLink>
+        </section>
+
+        <section>
+            <div class="section-label">Advanced</div>
+            <NavLink href="/docs/variants">Variants</NavLink>
+            <NavLink href="/docs/layout-animations">Layout Animations</NavLink>
+            <NavLink href="/docs/motion-value">MotionValue</NavLink>
+            <NavLink href="/docs/springs">Springs</NavLink>
+            <NavLink href="/docs/easing">Easing</NavLink>
+        </section>
+    </nav>
+
+    <main class="docs-content">
+        @Body
+    </main>
+</div>

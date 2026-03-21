@@ -56,12 +56,23 @@ public sealed class AnimationEngine : IAsyncDisposable
     public async ValueTask AnimateToAsync(
         string elementId,
         Dictionary<string, object?> values,
-        TransitionConfig? transition)
+        TransitionConfig? transition,
+        Func<Task>? onComplete = null)
     {
         if (!_elements.TryGetValue(elementId, out var state)) return;
         state.SetBaseAnimation(values, transition);
-        state.AnimateTo(values, transition);
-        await EnsureLoopRunningAsync();
+        if (onComplete != null)
+        {
+            var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            state.AnimateTo(values, transition, tcs);
+            await EnsureLoopRunningAsync();
+            _ = tcs.Task.ContinueWith(_ => onComplete(), TaskScheduler.Default);
+        }
+        else
+        {
+            state.AnimateTo(values, transition);
+            await EnsureLoopRunningAsync();
+        }
     }
 
     /// <summary>Animate to the given values and await animation completion.</summary>

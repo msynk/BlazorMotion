@@ -1,0 +1,41 @@
+@page "/docs/hover"
+
+<PageTitle>Hover — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / Gestures / <span>Hover</span></div>
+<h1>Hover</h1>
+<p>Animate when a pointer (mouse or stylus) enters and leaves an element.</p>
+
+<h2>Usage</h2>
+<pre><code>&lt;Motion Tag="div"
+        WhileHover="@@(new AnimationProps { Scale = 1.1 })"
+        Transition="@@(new TransitionConfig { Type = "spring", Stiffness = 400, Damping = 17 })"&gt;
+    Hover me
+&lt;/Motion&gt;</code></pre>
+
+<div class="demo-area">
+    <Motion Class="demo-box"
+            WhileHover="@(new AnimationProps { Scale = 1.15, BackgroundColor = "#7c3aed" })"
+            Transition="@(new TransitionConfig { Type = TransitionType.Spring, Stiffness = 400, Damping = 17 })">
+        Hover me
+    </Motion>
+</div>
+
+<h2>Events</h2>
+<table class="prop-table">
+    <thead><tr><th>Event</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>OnHoverStart</td><td>Fired when pointer enters the element.</td></tr>
+        <tr><td>OnHoverEnd</td><td>Fired when pointer leaves the element.</td></tr>
+    </tbody>
+</table>
+
+<pre><code>&lt;Motion WhileHover="@@(new AnimationProps { Scale = 1.05 })"
+        OnHoverStart="@@(() =&gt; Console.WriteLine("Hover started"))"
+        OnHoverEnd="@@(() =&gt;   Console.WriteLine("Hover ended"))"&gt;
+    ...
+&lt;/Motion&gt;</code></pre>
+
+<div class="callout callout-tip">
+    <strong>Note:</strong> Hover uses <code>pointerenter</code>/<code>pointerleave</code> events, so it works with both mouse and pen/stylus input.
+</div>

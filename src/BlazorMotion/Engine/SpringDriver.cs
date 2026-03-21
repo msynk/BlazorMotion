@@ -29,8 +29,19 @@ internal sealed class SpringDriver : IAnimationDriver
     {
         _pos = from;
         _target = to;
-        _k = config.Stiffness;
-        _d = config.Damping;
+
+        // Resolve stiffness/damping: if Bounce+VisualDuration (or Bounce+Duration) are set,
+        // derive them from those intuitive parameters (Framer Motion-compatible).
+        double k = config.Stiffness;
+        double d = config.Damping;
+        if (config.Bounce.HasValue)
+        {
+            double vd = config.VisualDuration ?? config.Duration;
+            (k, d) = TransitionConfig.SpringFromBounce(vd, config.Bounce.Value, config.Mass);
+        }
+
+        _k = k;
+        _d = d;
         _m = config.Mass;
         _vel = config.Velocity;
         _restSpeed = config.RestSpeed;

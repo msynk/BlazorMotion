@@ -1,0 +1,67 @@
+@page "/docs/in-view"
+
+<PageTitle>In View — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / <span>In View</span></div>
+<h1>In View</h1>
+<p>Animate elements as they enter the viewport using <code>WhileInView</code> and <code>ViewportOptions</code>.</p>
+
+<h2>Basic usage</h2>
+<pre><code>&lt;Motion Tag="div"
+        Initial="@@(new AnimationProps { Opacity = 0, Y = 40 })"
+        WhileInView="@@(new AnimationProps { Opacity = 1, Y = 0 })"
+        Transition="@@(new TransitionConfig { Duration = 0.5 })"&gt;
+    Animates when scrolled into view
+&lt;/Motion&gt;</code></pre>
+
+<h2>Play once</h2>
+<p>Use <code>Once="true"</code> (or set <code>Viewport.Once = true</code>) to animate in only once:</p>
+<pre><code>&lt;Motion WhileInView="@@(new AnimationProps { Opacity = 1 })"
+        Once="true" /&gt;</code></pre>
+
+<h2>ViewportOptions</h2>
+<p>Fine-grained control over the intersection behaviour:</p>
+<pre><code>&lt;Motion WhileInView="@@(new AnimationProps { Opacity = 1, Y = 0 })"
+        Viewport="@@(new ViewportOptions
+        {
+            Once   = true,       // Only animate in once
+            Margin = "-100px",   // Shrink detection area (rootMargin syntax)
+            Amount = "0.5"       // Require 50% visibility to trigger
+        })" /&gt;</code></pre>
+
+<h2>ViewportOptions reference</h2>
+<table class="prop-table">
+    <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>Once</td><td>bool</td><td>false</td><td>Fire only on first entry.</td></tr>
+        <tr><td>Margin</td><td>string</td><td>"0px"</td><td>CSS rootMargin syntax to expand/shrink detection area.</td></tr>
+        <tr><td>Amount</td><td>string</td><td>"some"</td><td>"some" | "all" | "0"–"1" — how much of the element must be visible.</td></tr>
+    </tbody>
+</table>
+
+<h2>Events</h2>
+<table class="prop-table">
+    <thead><tr><th>Event</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>OnViewportEnter</td><td>Element entered the viewport.</td></tr>
+        <tr><td>OnViewportLeave</td><td>Element left the viewport.</td></tr>
+    </tbody>
+</table>
+
+<h2>Staggered in-view list</h2>
+<p>Combine <code>WhileInView</code> with variant stagger for list reveal animations:</p>
+<pre><code>@@{
+    var container = new MotionVariants
+    {
+        ["hidden"]  = new AnimationProps { Opacity = 0 },
+        ["visible"] = new AnimationProps { Opacity = 1 }
+    };
+
+    int i = 0;
+    foreach (var item in items)
+    {
+        &lt;Motion WhileInView="@@(new AnimationProps { Opacity = 1, Y = 0 })"
+                Initial="@@(new AnimationProps { Opacity = 0, Y = 30 })"
+                Transition="@@(new TransitionConfig { Delay = i++ * 0.1 })" /&gt;
+    }
+}</code></pre>

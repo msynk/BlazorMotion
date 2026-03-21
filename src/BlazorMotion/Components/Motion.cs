@@ -43,7 +43,18 @@ public class Motion : ComponentBase, IAsyncDisposable
     [Parameter] public AnimationTarget? WhileFocus { get; set; }
     [Parameter] public AnimationTarget? WhileDrag { get; set; }
     [Parameter] public AnimationTarget? WhileInView { get; set; }
+
+    /// <summary>
+    /// If <c>true</c>, <see cref="WhileInView"/> fires only once and never deactivates.
+    /// Shorthand for <c>Viewport = new ViewportOptions { Once = true }</c>.
+    /// </summary>
     [Parameter] public bool Once { get; set; }
+
+    /// <summary>
+    /// Advanced viewport options for <see cref="WhileInView"/> (margin, amount, once).
+    /// When set, <see cref="Once"/> is ignored in favour of <c>Viewport.Once</c>.
+    /// </summary>
+    [Parameter] public ViewportOptions? Viewport { get; set; }
 
     //  Transition 
     [Parameter] public TransitionConfig? Transition { get; set; }
@@ -67,6 +78,9 @@ public class Motion : ComponentBase, IAsyncDisposable
     [Parameter] public EventCallback OnTapCancel { get; set; }
     [Parameter] public EventCallback OnFocusStart { get; set; }
     [Parameter] public EventCallback OnFocusEnd { get; set; }
+    [Parameter] public EventCallback OnPanStart { get; set; }
+    [Parameter] public EventCallback<PanInfo> OnPan { get; set; }
+    [Parameter] public EventCallback OnPanEnd { get; set; }
     [Parameter] public EventCallback OnDragStart { get; set; }
     [Parameter] public EventCallback OnDrag { get; set; }
     [Parameter] public EventCallback OnDragEnd { get; set; }
@@ -196,14 +210,23 @@ public class Motion : ComponentBase, IAsyncDisposable
 
         // Viewport observation  JS IntersectionObserver callbacks C#
         if (WhileInView != null || OnViewportEnter.HasDelegate || OnViewportLeave.HasDelegate)
-            await Interop.ObserveViewportAsync(_id, _dotnet!, Once);
+        {
+            if (Viewport != null)
+                await Interop.ObserveViewportWithOptionsAsync(_id, _dotnet!, Viewport);
+            else
+                await Interop.ObserveViewportAsync(_id, _dotnet!, Once);
+        }
 
         // Start enter animation
         if (Animate != null)
         {
             var animateProps = ResolveProps(Animate);
             if (animateProps != null)
-                await Engine.AnimateToAsync(_id, animateProps.ToJsDictionary(), BuildEffectiveTransition());
+            {
+                await OnAnimationStart.InvokeAsync();
+                await Engine.AnimateToAsync(_id, animateProps.ToJsDictionary(), BuildEffectiveTransition(),
+                    () => OnAnimationComplete.InvokeAsync());
+            }
         }
         else if (VariantCtx?.ActiveVariant is string inheritedVariant && Variants != null)
         {
@@ -226,7 +249,11 @@ public class Motion : ComponentBase, IAsyncDisposable
         {
             var animateProps = ResolveProps(Animate);
             if (animateProps != null)
-                await Engine.AnimateToAsync(_id, animateProps.ToJsDictionary(), BuildEffectiveTransition());
+            {
+                await OnAnimationStart.InvokeAsync();
+                await Engine.AnimateToAsync(_id, animateProps.ToJsDictionary(), BuildEffectiveTransition(),
+                    () => OnAnimationComplete.InvokeAsync());
+            }
             _prevAnimate = Animate;
         }
         else if (Animate == null && Variants != null)
@@ -403,13 +430,48 @@ public class Motion : ComponentBase, IAsyncDisposable
             await Engine.DeactivateGestureLayerAsync(_id, "drag");
 
         var dragOpt = DragOptions ?? new DragOptions();
-        await Engine.EndDragAsync(
-            _id, velX, velY, dragOpt.Momentum, dragOpt.Constraints,
-            dragOpt.Axis == DragAxis.Both ? null : dragOpt.Axis.ToString().ToLowerInvariant(),
-            dragOpt.SnapTransition);
+
+        if (dragOpt.SnapToOrigin)
+        {
+            var snapT = dragOpt.SnapTransition ?? new TransitionConfig
+                { Type = TransitionType.Spring, Stiffness = 400, Damping = 35 };
+            await Engine.AnimateToAsync(_id,
+                new Dictionary<string, object?> { ["x"] = 0.0, ["y"] = 0.0 }, snapT);
+        }
+        else
+        {
+            await Engine.EndDragAsync(
+                _id, velX, velY, dragOpt.Momentum, dragOpt.Constraints,
+                dragOpt.Axis == DragAxis.Both ? null : dragOpt.Axis.ToString().ToLowerInvariant(),
+                dragOpt.SnapTransition);
+        }
 
         await OnDragEnd.InvokeAsync();
     }
+
+    //  Pan (pointer moves without moving the element) 
+    [JSInvokable]
+    public async Task OnPanStart_() => await OnPanStart.InvokeAsync();
+
+    [JSInvokable]
+    public async Task OnPanMove(double pointX, double pointY,
+        double deltaX, double deltaY, double offsetX, double offsetY,
+        double velocityX, double velocityY)
+    {
+        if (OnPan.HasDelegate)
+        {
+            await OnPan.InvokeAsync(new PanInfo
+            {
+                Point    = new PointInfo { X = pointX,    Y = pointY },
+                Delta    = new PointInfo { X = deltaX,    Y = deltaY },
+                Offset   = new PointInfo { X = offsetX,   Y = offsetY },
+                Velocity = new PointInfo { X = velocityX, Y = velocityY },
+            });
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnPanEnd_() => await OnPanEnd.InvokeAsync();
 
     //  Viewport 
     [JSInvokable]
@@ -495,6 +557,7 @@ public class Motion : ComponentBase, IAsyncDisposable
         if (WhileHover != null || OnHoverStart.HasDelegate || OnHoverEnd.HasDelegate) d["hover"] = true;
         if (WhileTap != null || OnTapStart.HasDelegate || OnTap.HasDelegate) d["tap"] = true;
         if (WhileFocus != null || OnFocusStart.HasDelegate || OnFocusEnd.HasDelegate) d["focus"] = true;
+        if (OnPanStart.HasDelegate || OnPan.HasDelegate || OnPanEnd.HasDelegate) d["pan"] = true;
         if (Drag)
         {
             d["drag"] = true;
@@ -502,6 +565,7 @@ public class Motion : ComponentBase, IAsyncDisposable
             if (dragOpt.Axis != DragAxis.Both) d["dragAxis"] = dragOpt.Axis.ToString().ToLowerInvariant();
             d["dragElastic"] = dragOpt.Elastic;
             if (dragOpt.Constraints != null) d["dragConstraints"] = dragOpt.Constraints.ToJsObject();
+            if (dragOpt.DirectionLock) d["dragDirectionLock"] = true;
         }
         return d;
     }

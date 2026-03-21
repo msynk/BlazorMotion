@@ -1,0 +1,62 @@
+@page "/docs/springs"
+
+<PageTitle>Springs — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / <span>Springs</span></div>
+<h1>Springs</h1>
+<p>Spring animations feel natural because they simulate real physics — velocity, stiffness, and damping. BlazorMotion runs the spring simulation in C# WASM each animation frame.</p>
+
+<h2>Classic spring parameters</h2>
+<pre><code>new TransitionConfig
+{
+    Type      = "spring",
+    Stiffness = 200,   // How "stiff" the spring is (higher = snappier)
+    Damping   = 20,    // Resistance (higher = less bounce)
+    Mass      = 1,     // Virtual mass (higher = slower, more momentum)
+    Velocity  = 0      // Initial velocity (px/s or units/s)
+}</code></pre>
+
+<h2>BounceSpring — visual API</h2>
+<p>BlazorMotion also supports Framer Motion's intuitive bounce API:</p>
+<pre><code>// Shorthand factory
+TransitionConfig.BounceSpring(duration: 0.5, bounce: 0.25)
+
+// Value range:
+//   bounce = 0    → no bounce, critically damped
+//   bounce = 0.25 → gentle bounce
+//   bounce = 0.5  → moderate bounce
+//   bounce = 1.0  → maximum bounce</code></pre>
+
+<div class="demo-area" style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
+    @foreach (var (label, bounce) in new[] { ("No bounce", 0.0), ("Gentle", 0.25), ("Medium", 0.5), ("Bouncy!", 0.8) })
+    {
+        <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+            <Motion Class="demo-box"
+                    Initial="@(new AnimationProps { Y = -60 })"
+                    Animate="@(new AnimationProps { Y = 0 })"
+                    Transition="@(TransitionConfig.BounceSpring(0.7, bounce))">
+                @label
+            </Motion>
+            <span style="font-size:0.75rem;color:var(--text-muted)">bounce: @bounce</span>
+        </div>
+    }
+</div>
+
+<h2>Stiffness / Damping playground</h2>
+<table class="prop-table">
+    <thead><tr><th>Preset</th><th>Stiffness</th><th>Damping</th><th>Feel</th></tr></thead>
+    <tbody>
+        <tr><td>Stiff</td><td>400</td><td>40</td><td>Very snappy, no overshoot</td></tr>
+        <tr><td>Default</td><td>200</td><td>20</td><td>Responsive, light bounce</td></tr>
+        <tr><td>Wobbly</td><td>180</td><td>12</td><td>Soft, bouncy</td></tr>
+        <tr><td>Gentle</td><td>100</td><td>20</td><td>Slow, smooth</td></tr>
+    </tbody>
+</table>
+
+<h2>Physics formula</h2>
+<p>BlazorMotion uses a <strong>semi-implicit Euler</strong> integration:</p>
+$$F = -k(x - x_0) - d \cdot v$$
+$$v_{n+1} = v_n + (F/m) \cdot \Delta t \qquad x_{n+1} = x_n + v_{n+1} \cdot \Delta t$$
+<p>For BounceSpring, the parameters are derived as:</p>
+$$\omega_0 = \frac{2\pi}{T_{\text{visual}}} \qquad \zeta = \sqrt{1 - \text{bounce}^{2/3}}$$
+$$k = \omega_0^2 \cdot m \qquad d = 2 \cdot \zeta \cdot \omega_0 \cdot m$$

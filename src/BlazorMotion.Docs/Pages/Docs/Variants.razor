@@ -1,0 +1,76 @@
+@page "/docs/variants"
+
+<PageTitle>Variants — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / <span>Variants</span></div>
+<h1>Variants</h1>
+<p>Variants let you define named animation states and switch between them with a simple key. They also enable staggered animations on lists of children.</p>
+
+<h2>Basic variants</h2>
+<pre><code>@@code {
+    readonly MotionVariants _variants = new()
+    {
+        ["hidden"]   = new AnimationProps { Opacity = 0, Scale = 0.8 },
+        ["visible"]  = new AnimationProps { Opacity = 1, Scale = 1.0 },
+        ["exit"]     = new AnimationProps { Opacity = 0, Scale = 0.8, Y = -20 }
+    };
+    string _state = "hidden";
+}
+
+&lt;Motion Variants="@@_variants"
+        VariantKey="@@_state"
+        Transition="@@(new TransitionConfig { Type = "spring" })" /&gt;
+
+&lt;button @@onclick="@@(() =&gt; _state = "visible")"&gt;Show&lt;/button&gt;</code></pre>
+
+<div class="demo-area" style="display:flex;flex-direction:column;gap:1rem;align-items:center;">
+    <div style="display:flex;gap:0.5rem;">
+        <button class="demo-button" @onclick="@(() => _state = "hidden")">Hidden</button>
+        <button class="demo-button" @onclick="@(() => _state = "visible")">Visible</button>
+    </div>
+    <Motion Class="demo-box"
+            Variants="@_variants"
+            VariantKey="@_state"
+            Transition="@(new TransitionConfig { Type = TransitionType.Spring, Stiffness = 300, Damping = 20 })">
+        @_state
+    </Motion>
+</div>
+
+<h2>Propagation</h2>
+<p>A parent's variant key propagates to children that share the same variant names, enabling coordinated enter/exit animations:</p>
+<pre><code>&lt;Motion Variants="@@containerVariants" VariantKey="@@_key"&gt;
+    &lt;Motion Variants="@@itemVariants" /&gt;    &lt;!-- inherits parent key --&gt;
+    &lt;Motion Variants="@@itemVariants" /&gt;
+&lt;/Motion&gt;</code></pre>
+
+<h2>Stagger</h2>
+<p>Add <code>StaggerChildren</code> and <code>DelayChildren</code> to the container transition to stagger child animations:</p>
+<pre><code>@@code {
+    readonly MotionVariants _container = new()
+    {
+        ["hidden"]  = new AnimationProps { Opacity = 0 },
+        ["visible"] = new AnimationProps { Opacity = 1 }
+    };
+    // Container transition — controls stagger timing
+    readonly TransitionConfig _containerTransition = new()
+    {
+        StaggerChildren = 0.1,
+        DelayChildren   = 0.2
+    };
+}
+
+&lt;Motion Variants="@@_container" VariantKey="visible"
+        Transition="@@_containerTransition"&gt;
+    @@foreach (var item in items)
+    {
+        &lt;Motion Variants="@@_item" /&gt;
+    }
+&lt;/Motion&gt;</code></pre>
+
+@code {
+    readonly MotionVariants _variants = MotionVariants.Create(
+        ("hidden",  new AnimationProps { Opacity = 0, Scale = 0.7 }),
+        ("visible", new AnimationProps { Opacity = 1, Scale = 1.0 })
+    );
+    string _state = "visible";
+}

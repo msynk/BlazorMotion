@@ -1,0 +1,27 @@
+@page "/docs/focus"
+
+<PageTitle>Focus — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / Gestures / <span>Focus</span></div>
+<h1>Focus</h1>
+<p>Animate an element while it has keyboard or programmatic focus. Useful for accessible interactive components.</p>
+
+<h2>Usage</h2>
+<pre><code>&lt;Motion Tag="input"
+        WhileFocus="@@(new AnimationProps { Scale = 1.03 })"
+        Transition="@@(new TransitionConfig { Type = "spring", Stiffness = 300, Damping = 20 })"
+        placeholder="Click to focus" /&gt;</code></pre>
+
+<div class="demo-area">
+    <Motion Tag="input" Class="demo-input"
+            WhileFocus="@(new AnimationProps { Scale = 1.04 })"
+            Transition="@(new TransitionConfig { Type = TransitionType.Spring, Stiffness = 300, Damping = 20 })"
+            placeholder=" Click or tab to focus" />
+</div>
+
+<h2>Accessibility</h2>
+<p><code>WhileFocus</code> uses the <code>focus</code>/<code>blur</code> events, so it responds to both mouse and keyboard navigation. This makes it ideal for highlighting focused form fields or interactive elements in a keyboard-accessible way.</p>
+
+<div class="callout callout-tip">
+    <strong>Tip:</strong> Combine <code>WhileFocus</code> with <code>WhileHover</code> to create rich interactive states for buttons and form controls.
+</div>

@@ -1,0 +1,62 @@
+@page "/docs/pan"
+
+<PageTitle>Pan — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / Gestures / <span>Pan</span></div>
+<h1>Pan</h1>
+<p>Pan is a lower-level gesture than <a href="/docs/drag">Drag</a> — it detects directional pointer movement without moving the element. Use it to build custom gesture-driven UI (carousels, custom sliders, canvas interactions).</p>
+
+<h2>Usage</h2>
+<pre><code>&lt;Motion Tag="div"
+        OnPanStart="@@HandlePanStart"
+        OnPan="@@HandlePan"
+        OnPanEnd="@@HandlePanEnd"&gt;
+    Pan over me
+&lt;/Motion&gt;
+
+@@code {
+    void HandlePanStart() { }
+
+    void HandlePan(PanInfo info)
+    {
+        Console.WriteLine($"x: {info.Offset.X:F0}, vx: {info.Velocity.X:F0}");
+    }
+
+    void HandlePanEnd() { }
+}</code></pre>
+
+<div class="demo-area" style="display:flex;flex-direction:column;gap:1rem;align-items:center;">
+    <Motion Class="demo-box"
+            OnPan="@HandlePan">
+        Pan over me
+    </Motion>
+    <p style="font-size:0.8rem;color:var(--text-muted)">Offset X: @_offsetX  Y: @_offsetY</p>
+</div>
+
+<h2>PanInfo</h2>
+<p>The <code>OnPan</code> callback receives a <code>PanInfo</code> object:</p>
+<table class="prop-table">
+    <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>Point</td><td>PointInfo</td><td>Current pointer position (page coordinates).</td></tr>
+        <tr><td>Delta</td><td>PointInfo</td><td>Movement since last event (px).</td></tr>
+        <tr><td>Offset</td><td>PointInfo</td><td>Total movement from pan start (px).</td></tr>
+        <tr><td>Velocity</td><td>PointInfo</td><td>Current velocity (px/s).</td></tr>
+    </tbody>
+</table>
+
+<h2>Difference from Drag</h2>
+<p>
+    <strong>Drag</strong> physically moves the element and supports constraints, inertia, and snap-back.<br />
+    <strong>Pan</strong> tracks pointer movement but does not move the element — it gives you raw gesture data to drive whatever you need.
+</p>
+
+@code {
+    double _offsetX, _offsetY;
+    void HandlePan(PanInfo info)
+    {
+        _offsetX = Math.Round(info.Offset.X, 1);
+        _offsetY = Math.Round(info.Offset.Y, 1);
+        StateHasChanged();
+    }
+}

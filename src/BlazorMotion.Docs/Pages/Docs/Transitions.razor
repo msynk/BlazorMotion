@@ -1,0 +1,104 @@
+@page "/docs/transitions"
+
+<PageTitle>Transitions — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / <span>Transitions</span></div>
+<h1>Transitions</h1>
+<p>A <code>TransitionConfig</code> controls <em>how</em> a value animates from its current state to the target — duration, easing, type, and delay.</p>
+
+<h2>Animation types</h2>
+
+<h3>Tween</h3>
+<p>Duration-based animation with an easing curve. The default type.</p>
+<pre><code>new TransitionConfig
+{
+    Type     = "tween",
+    Duration = 0.3,
+    Ease     = "easeInOut"
+}</code></pre>
+
+<h3>Spring</h3>
+<p>Physics-based spring animation. Use for natural, responsive feel.</p>
+<pre><code>new TransitionConfig
+{
+    Type      = "spring",
+    Stiffness = 200,
+    Damping   = 20,
+    Mass      = 1
+}</code></pre>
+
+<h3>BounceSpring (Framer-compatible)</h3>
+<p>Visual-duration spring using <code>bounce</code> (0 = no bounce, 1 = very bouncy):</p>
+<pre><code>// Static factory
+TransitionConfig.BounceSpring(duration: 0.5, bounce: 0.25, mass: 1)
+</code></pre>
+
+<div class="demo-area" style="display:flex;gap:1rem;flex-wrap:wrap;">
+    <Motion Class="demo-box"
+            Initial="@(new AnimationProps { X = -60 })"
+            Animate="@(new AnimationProps { X = 60 })"
+            Transition="@(new TransitionConfig { Type = TransitionType.Tween, Duration = 0.5, Ease = BlazorMotion.Models.Easing.EaseInOut })">
+        Tween
+    </Motion>
+    <Motion Class="demo-box"
+            Initial="@(new AnimationProps { X = -60 })"
+            Animate="@(new AnimationProps { X = 60 })"
+            Transition="@(new TransitionConfig { Type = TransitionType.Spring, Stiffness = 300, Damping = 10 })">
+        Spring
+    </Motion>
+    <Motion Class="demo-box"
+            Initial="@(new AnimationProps { X = -60 })"
+            Animate="@(new AnimationProps { X = 60 })"
+            Transition="@(TransitionConfig.BounceSpring(0.6, 0.4))">
+        Bounce
+    </Motion>
+</div>
+
+<h3>Inertia</h3>
+<p>Momentum-based deceleration primarily used after drag gestures:</p>
+<pre><code>new TransitionConfig
+{
+    Type          = "inertia",
+    Velocity      = 500,
+    TimeConstant  = 750,
+    Min           = 0,
+    Max           = 1000
+}</code></pre>
+
+<h3>Keyframes</h3>
+<p>Animate through a sequence of values:</p>
+<pre><code>new TransitionConfig
+{
+    Type     = "keyframes",
+    Values   = new[] { 0.0, 1.2, 0.9, 1.0 },
+    Times    = new[] { 0.0, 0.6, 0.8, 1.0 },
+    Duration = 0.8
+}</code></pre>
+
+<h2>TransitionConfig reference</h2>
+<table class="prop-table">
+    <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>Type</td><td>string?</td><td>"tween"</td><td>"tween" | "spring" | "inertia" | "keyframes"</td></tr>
+        <tr><td>Duration</td><td>double?</td><td>0.3</td><td>Animation duration in seconds (tween/keyframes)</td></tr>
+        <tr><td>Ease</td><td>string?</td><td>"easeOut"</td><td>Easing name or cubic-bezier string</td></tr>
+        <tr><td>Delay</td><td>double?</td><td>0</td><td>Delay before animation starts (seconds)</td></tr>
+        <tr><td>Repeat</td><td>int?</td><td>0</td><td>Number of repetitions (int.MaxValue for infinite)</td></tr>
+        <tr><td>RepeatType</td><td>string?</td><td>"loop"</td><td>"loop" | "reverse" | "mirror"</td></tr>
+        <tr><td>Stiffness</td><td>double?</td><td>100</td><td>Spring stiffness (spring type)</td></tr>
+        <tr><td>Damping</td><td>double?</td><td>10</td><td>Spring damping (spring type)</td></tr>
+        <tr><td>Mass</td><td>double?</td><td>1</td><td>Spring mass (spring type)</td></tr>
+        <tr><td>Bounce</td><td>double?</td><td>—</td><td>0–1 bounce amount (BounceSpring)</td></tr>
+        <tr><td>VisualDuration</td><td>double?</td><td>—</td><td>Perceived duration in seconds (BounceSpring)</td></tr>
+        <tr><td>Velocity</td><td>double?</td><td>0</td><td>Initial velocity (inertia/spring)</td></tr>
+        <tr><td>TimeConstant</td><td>double?</td><td>750</td><td>Deceleration constant ms (inertia)</td></tr>
+        <tr><td>OnUpdate</td><td>Action&lt;double&gt;?</td><td>—</td><td>Called each frame with current value</td></tr>
+    </tbody>
+</table>
+
+<h2>Easing functions</h2>
+<pre><code>"linear" | "easeIn" | "easeOut" | "easeInOut"
+"circIn" | "circOut" | "circInOut"
+"backIn" | "backOut" | "backInOut"
+"anticipate"
+"[0.17, 0.67, 0.83, 0.67]"   // custom cubic-bezier</code></pre>

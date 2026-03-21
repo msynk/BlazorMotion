@@ -1,0 +1,63 @@
+@page "/docs/motion-value"
+
+<PageTitle>MotionValue — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / <span>MotionValue</span></div>
+<h1>MotionValue</h1>
+<p><code>MotionValue&lt;T&gt;</code> is a reactive, frame-accurate value container. Subscribe to it to drive custom animations, derived values, and side effects outside of the standard <code>&lt;Motion&gt;</code> lifecycle.</p>
+
+<h2>Create a MotionValue</h2>
+<pre><code>@@inject IMotionValueFactory MVFactory
+
+@@code {
+    MotionValue&lt;double&gt; _x = default!;
+
+    protected override void OnInitialized()
+    {
+        _x = MVFactory.Create(0.0);
+        _x.OnChange += v =&gt; Console.WriteLine($"x changed to {v}");
+    }
+}</code></pre>
+
+<h2>Reading and writing</h2>
+<pre><code>double current = _x.Current;
+_x.Set(100.0);</code></pre>
+
+<h2>Derived values</h2>
+<p>Create a value that transforms another value:</p>
+<pre><code>// opacity = 1 - (x / 200)
+var opacity = _x.Derived(v =&gt; Math.Clamp(1 - v / 200.0, 0, 1));</code></pre>
+
+<h2>Scroll-linked MotionValue</h2>
+<p>Combine with <code>ScrollTracker</code> to drive values from scroll position:</p>
+<pre><code>@@inject ScrollTracker Scroll
+
+MotionValue&lt;double&gt; _scrollY = default!;
+
+protected override async Task OnAfterRenderAsync(bool firstRender)
+{
+    if (firstRender)
+    {
+        _scrollY = MVFactory.Create(0.0);
+        await Scroll.TrackAsync(info =&gt;
+        {
+            _scrollY.Set(info.ScrollY);
+        });
+    }
+}</code></pre>
+
+<h2>MotionValue API</h2>
+<table class="prop-table">
+    <thead><tr><th>Member</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>Current</td><td>The current value.</td></tr>
+        <tr><td>Set(value)</td><td>Update value and notify subscribers.</td></tr>
+        <tr><td>OnChange</td><td>Event fired on each value change.</td></tr>
+        <tr><td>Derived(transform)</td><td>Returns a new MotionValue derived from this one.</td></tr>
+        <tr><td>Dispose()</td><td>Unsubscribes and cleans up.</td></tr>
+    </tbody>
+</table>
+
+<div class="callout callout-tip">
+    <strong>Tip:</strong> MotionValues update synchronously within the animation frame loop, keeping them perfectly in sync with C# WASM animations.
+</div>

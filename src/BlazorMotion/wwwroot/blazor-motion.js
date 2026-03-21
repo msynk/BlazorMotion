@@ -75,7 +75,6 @@ export function getComputedStyleValue(elementId, prop) {
 // 
 
 const _eventCleanup = new Map(); // elementId  Array<() => void>
-const _vpRefs       = new Map(); // elementId  { dotnetRef, once }
 
 export function registerElement(elementId) {
     const el = document.getElementById(elementId);
@@ -152,18 +151,74 @@ export function attachEventListeners(elementId, events, dotnetRef) {
         cleanups.push(() => { el.removeEventListener('focusin', onIn); el.removeEventListener('focusout', onOut); });
     }
 
+    //  Pan (detects movement ≥ 3px without moving the element) 
+    if (events.pan) {
+        _attachPan(el, dotnetRef, cleanups);
+    }
+
     //  Drag 
     if (events.drag) {
         _attachDrag(elementId, el, events, dotnetRef, cleanups);
     }
 }
 
+function _attachPan(el, dotnetRef, cleanups) {
+    const PAN_THRESHOLD = 3; // pixels before pan is detected
+    let panning = false;
+    let startX, startY, lastX, lastY, lastT;
+    let velX = 0, velY = 0;
+
+    const onDown = (e) => {
+        if (e.button !== 0 && e.pointerType !== 'touch') return;
+        startX = lastX = e.clientX; startY = lastY = e.clientY;
+        lastT = Date.now(); velX = velY = 0; panning = false;
+        el.setPointerCapture(e.pointerId);
+    };
+
+    const onMove = (e) => {
+        const dx = e.clientX - startX, dy = e.clientY - startY;
+        const now = Date.now(), dt = now - lastT;
+        if (dt > 0) {
+            velX = (e.clientX - lastX) / dt * 1000;
+            velY = (e.clientY - lastY) / dt * 1000;
+        }
+        lastX = e.clientX; lastY = e.clientY; lastT = now;
+
+        if (!panning && Math.sqrt(dx * dx + dy * dy) >= PAN_THRESHOLD) {
+            panning = true;
+            dotnetRef.invokeMethodAsync('OnPanStart_');
+        }
+        if (panning) {
+            dotnetRef.invokeMethodAsync('OnPanMove',
+                e.clientX, e.clientY,
+                e.clientX - lastX, e.clientY - lastY,
+                e.clientX - startX, e.clientY - startY,
+                velX, velY);
+        }
+    };
+
+    const onUp = () => { if (panning) { panning = false; dotnetRef.invokeMethodAsync('OnPanEnd_'); } };
+
+    el.addEventListener('pointerdown',   onDown);
+    el.addEventListener('pointermove',   onMove);
+    el.addEventListener('pointerup',     onUp);
+    el.addEventListener('pointercancel', onUp);
+    cleanups.push(() => {
+        el.removeEventListener('pointerdown',   onDown);
+        el.removeEventListener('pointermove',   onMove);
+        el.removeEventListener('pointerup',     onUp);
+        el.removeEventListener('pointercancel', onUp);
+    });
+}
+
 function _attachDrag(elementId, el, opts, dotnetRef, cleanups) {
     const axis        = opts.dragAxis        ?? null;
     const constraints = opts.dragConstraints ?? null;
     const elastic     = typeof opts.dragElastic === 'number' ? opts.dragElastic : 0.35;
+    const dirLock     = !!opts.dragDirectionLock;
 
     let dragging = false;
+    let lockedAxis = null; // null = not yet locked, 'x' or 'y' once detected
     let startPX, startPY, startElX, startElY;
     let lastPX, lastPY, lastT, velX = 0, velY = 0;
 
@@ -181,6 +236,7 @@ function _attachDrag(elementId, el, opts, dotnetRef, cleanups) {
         lastPX = e.clientX; lastPY = e.clientY; lastT = Date.now();
         velX = velY = 0;
         dragging = true;
+        lockedAxis = null;
         el.setPointerCapture(e.pointerId);
         dotnetRef.invokeMethodAsync('OnPointerDown_Drag');
     };
@@ -191,8 +247,16 @@ function _attachDrag(elementId, el, opts, dotnetRef, cleanups) {
         if (dt > 0) { velX = (e.clientX - lastPX) / dt * 16; velY = (e.clientY - lastPY) / dt * 16; }
         lastPX = e.clientX; lastPY = e.clientY; lastT = now;
 
-        let x = startElX + (axis === 'y' ? 0 : e.clientX - startPX);
-        let y = startElY + (axis === 'x' ? 0 : e.clientY - startPY);
+        // Direction lock detection
+        let effectiveAxis = axis;
+        if (dirLock && !lockedAxis) {
+            const dx = Math.abs(e.clientX - startPX), dy = Math.abs(e.clientY - startPY);
+            if (dx > 3 || dy > 3) lockedAxis = dx >= dy ? 'x' : 'y';
+        }
+        if (dirLock && lockedAxis) effectiveAxis = lockedAxis;
+
+        let x = startElX + (effectiveAxis === 'y' ? 0 : e.clientX - startPX);
+        let y = startElY + (effectiveAxis === 'x' ? 0 : e.clientY - startPY);
 
         if (constraints) {
             if (constraints.left   != null && x < constraints.left)   x = constraints.left   - applyElastic(constraints.left   - x);
@@ -233,31 +297,48 @@ function _attachDrag(elementId, el, opts, dotnetRef, cleanups) {
 // Viewport observation (whileInView)
 // 
 
-let _vpObserver = null;
+// Cache observers keyed by their options signature so we can re-use them.
+const _vpObservers = new Map(); // sig → IntersectionObserver
+const _vpRefs      = new Map(); // elementId → { dotnetRef, once }
 
-function _getVpObserver() {
-    if (_vpObserver) return _vpObserver;
-    _vpObserver = new IntersectionObserver((entries) => {
+function _vpSig(margin, threshold) { return `${margin}|${threshold}`; }
+
+function _getVpObserver(margin, threshold) {
+    const sig = _vpSig(margin, threshold);
+    if (_vpObservers.has(sig)) return _vpObservers.get(sig);
+    const obs = new IntersectionObserver((entries) => {
         for (const entry of entries) {
             const id  = entry.target.getAttribute('data-bmid');
             const ref = _vpRefs.get(id);
             if (!ref) continue;
             ref.dotnetRef.invokeMethodAsync('OnIntersect', entry.isIntersecting);
+            if (ref.once && entry.isIntersecting) {
+                obs.unobserve(entry.target);
+                _vpRefs.delete(id);
+            }
         }
-    }, { threshold: [0, 0.1, 0.5, 1.0] });
-    return _vpObserver;
+    }, { rootMargin: margin || '0px', threshold: threshold ?? 0 });
+    _vpObservers.set(sig, obs);
+    return obs;
 }
 
-export function observeViewport(elementId, dotnetRef, once) {
+export function observeViewport(elementId, dotnetRef, options) {
     const el = document.getElementById(elementId);
     if (!el) return;
-    _vpRefs.set(elementId, { dotnetRef, once: !!once });
-    _getVpObserver().observe(el);
+    const once      = options?.once      ?? false;
+    const margin    = options?.margin    ?? '0px';
+    const threshold = options?.threshold ?? 0;
+    _vpRefs.set(elementId, { dotnetRef, once });
+    _getVpObserver(margin, threshold).observe(el);
 }
 
 export function unobserveViewport(elementId) {
     const el = document.getElementById(elementId);
-    if (el) _getVpObserver().unobserve(el);
+    const ref = _vpRefs.get(elementId);
+    if (el && ref) {
+        // unobserve from every observer that might track this element
+        _vpObservers.forEach(obs => obs.unobserve(el));
+    }
     _vpRefs.delete(elementId);
 }
 

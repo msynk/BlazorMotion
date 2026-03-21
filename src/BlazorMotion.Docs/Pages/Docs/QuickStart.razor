@@ -1,0 +1,50 @@
+@page "/docs/quick-start"
+
+<PageTitle>Quick Start — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / <span>Quick Start</span></div>
+<h1>Quick Start</h1>
+<p>Get BlazorMotion running in your Blazor WebAssembly app in under 5 minutes.</p>
+
+<h2>Installation</h2>
+<p>Add the <code>BlazorMotion</code> project reference (or NuGet package when published):</p>
+<pre><code>&lt;PackageReference Include="BlazorMotion" Version="1.*" /&gt;</code></pre>
+
+<h2>Register services</h2>
+<p>In <code>Program.cs</code>:</p>
+<pre><code>using BlazorMotion.Extensions;
+
+builder.Services.AddBlazorMotion();</code></pre>
+
+<h2>Add global imports</h2>
+<p>In <code>_Imports.razor</code>:</p>
+<pre><code>@@using BlazorMotion.Components
+@@using BlazorMotion.Models
+@@using BlazorMotion.Services</code></pre>
+
+<h2>Your first animation</h2>
+<p>Replace any HTML element with a <code>&lt;Motion&gt;</code> component and add animation props:</p>
+<pre><code>&lt;Motion Tag="div"
+        Initial="@@(new AnimationProps { Opacity = 0, Y = 20 })"
+        Animate="@@(new AnimationProps  { Opacity = 1, Y = 0 })"
+        Transition="@@(TransitionConfig.BounceSpring(0.5, 0.3))"
+        Class="my-box"&gt;
+    Hello, BlazorMotion!
+&lt;/Motion&gt;</code></pre>
+
+<div class="demo-area">
+    <Motion Class="demo-box"
+            Initial="@(new AnimationProps { Opacity = 0, Scale = 0.5 })"
+            Animate="@(new AnimationProps { Opacity = 1, Scale = 1 })"
+            Transition="@(TransitionConfig.BounceSpring(0.6, 0.4))">
+        ✨
+    </Motion>
+</div>
+
+<h2>Next steps</h2>
+<ul>
+    <li><a href="/docs/motion-component">Explore the Motion component API</a></li>
+    <li><a href="/docs/transitions">Learn about transitions</a></li>
+    <li><a href="/docs/gestures">Add gesture animations</a></li>
+    <li><a href="/docs/variants">Use variants for complex state</a></li>
+</ul>

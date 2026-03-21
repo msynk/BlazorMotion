@@ -1,0 +1,59 @@
+@page "/docs/scroll"
+
+<PageTitle>Scroll — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / <span>Scroll</span></div>
+<h1>Scroll</h1>
+<p>BlazorMotion provides the <code>ScrollTracker</code> service to read scroll progress and drive scroll-linked animations.</p>
+
+<h2>Register and inject</h2>
+<pre><code>// Program.cs — already included in AddBlazorMotion()
+builder.Services.AddBlazorMotion();
+
+// Component
+@@inject ScrollTracker Scroll</code></pre>
+
+<h2>Scroll progress</h2>
+<p>Read the current scroll progress (0–1) of the page or a container element:</p>
+<pre><code>@@inject ScrollTracker Scroll
+
+&lt;Motion Tag="div"
+        style="width: @@(Scroll.Progress * 100)%; height: 4px; background: #7c3aed" /&gt;
+
+@@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await Scroll.TrackAsync(OnScrollUpdate);
+    }
+
+    void OnScrollUpdate(ScrollInfo info)
+    {
+        // info.Progress  → 0.0–1.0
+        // info.ScrollY   → raw pixel offset
+        StateHasChanged();
+    }
+}</code></pre>
+
+<h2>ScrollInfo reference</h2>
+<table class="prop-table">
+    <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>ScrollX</td><td>double</td><td>Horizontal scroll offset in pixels.</td></tr>
+        <tr><td>ScrollY</td><td>double</td><td>Vertical scroll offset in pixels.</td></tr>
+        <tr><td>Progress</td><td>double</td><td>Vertical scroll progress 0–1 (scrollY / maxScrollY).</td></tr>
+    </tbody>
+</table>
+
+<h2>Scroll-linked scale</h2>
+<p>Use scroll progress to drive any CSS value:</p>
+<pre><code>void OnScroll(ScrollInfo info)
+{
+    _scale = 1 + info.Progress * 0.5;    // 1.0 → 1.5
+    _opacity = 1 - info.Progress;        // 1.0 → 0.0
+    StateHasChanged();
+}</code></pre>
+
+<div class="callout callout-tip">
+    <strong>Tip:</strong> For triggering animations <em>when</em> an element enters the viewport (rather than scroll-linked), use <a href="/docs/in-view">WhileInView</a> instead.
+</div>

@@ -1,0 +1,73 @@
+@page "/docs/drag"
+
+<PageTitle>Drag — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / Gestures / <span>Drag</span></div>
+<h1>Drag</h1>
+<p>Enable draggable elements with physics-based inertia and optional constraints.</p>
+
+<h2>Basic drag</h2>
+<pre><code>&lt;Motion Tag="div" Drag="true"
+        WhileDrag="@@(new AnimationProps { Scale = 1.05 })"&gt;
+    Drag me
+&lt;/Motion&gt;</code></pre>
+
+<div class="demo-area">
+    <Motion Class="demo-box" Drag="true"
+            WhileDrag="@(new AnimationProps { Scale = 1.1, BackgroundColor = "#7c3aed" })"
+            Transition="@(new TransitionConfig { Type = TransitionType.Spring, Stiffness = 300, Damping = 30 })">
+        Drag me
+    </Motion>
+</div>
+
+<h2>DragOptions</h2>
+<pre><code>&lt;Motion Tag="div" Drag="true"
+        DragOptions="@@(new DragOptions
+        {
+            Axis         = "x",         // Constrain to axis: "x" | "y"
+            Constraints  = new DragConstraints { Left = -100, Right = 100 },
+            SnapToOrigin = true,         // Snap back to start on release
+            DirectionLock = true         // Lock to dominant axis after threshold
+        })" /&gt;</code></pre>
+
+<h2>DragOptions reference</h2>
+<table class="prop-table">
+    <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>Axis</td><td>string?</td><td>"x" or "y" — constrain drag to a single axis.</td></tr>
+        <tr><td>Constraints</td><td>DragConstraints?</td><td>Pixel boundaries: Left, Right, Top, Bottom.</td></tr>
+        <tr><td>Elastic</td><td>double</td><td>Elasticity past constraints (0–1). Default: 0.5.</td></tr>
+        <tr><td>SnapToOrigin</td><td>bool</td><td>Snap element back to origin on drag end.</td></tr>
+        <tr><td>DirectionLock</td><td>bool</td><td>Lock to dominant drag axis after 3px movement.</td></tr>
+        <tr><td>MomentumDuration</td><td>double</td><td>Inertia deceleration duration in ms.</td></tr>
+    </tbody>
+</table>
+
+<h2>Events</h2>
+<table class="prop-table">
+    <thead><tr><th>Event</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>OnDragStart</td><td>Drag began.</td></tr>
+        <tr><td>OnDrag</td><td>Element is being dragged.</td></tr>
+        <tr><td>OnDragEnd</td><td>Drag ended.</td></tr>
+    </tbody>
+</table>
+
+<h2>Snap to origin</h2>
+<p>Set <code>SnapToOrigin = true</code> to animate back to the start position on drag end using a spring:</p>
+<div class="demo-area">
+    <Motion Class="demo-box" Drag="true"
+            DragOptions="@(new DragOptions { SnapToOrigin = true })"
+            WhileDrag="@(new AnimationProps { Scale = 1.1 })">
+        Snaps back
+    </Motion>
+</div>
+
+<h2>Direction lock</h2>
+<p>Once the drag exceeds 3px on an axis, <code>DirectionLock = true</code> constrains movement to that axis only — similar to how native scroll hijacking works:</p>
+<div class="demo-area">
+    <Motion Class="demo-box" Drag="true"
+            DragOptions="@(new DragOptions { DirectionLock = true })">
+        Direction locked
+    </Motion>
+</div>
