@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="BlazorMotion.Samples/BlazorMotion.Samples.csproj" />
   <Project Path="BlazorMotion/BlazorMotion.csproj" />
+  <Project Path="BlazorMotion.Tests/BlazorMotion.Tests.csproj" />
 </Solution>
