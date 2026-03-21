@@ -1,8 +1,0 @@
-<Solution>
-  <Folder Name="/samples/">
-    <Project Path="samples/BlazorMotion.Samples.csproj" />
-  </Folder>
-  <Folder Name="/src/">
-    <Project Path="src/BlazorMotion.csproj" />
-  </Folder>
-</Solution>

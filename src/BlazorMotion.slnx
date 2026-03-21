@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="BlazorMotion.Samples/BlazorMotion.Samples.csproj" />
+  <Project Path="BlazorMotion/BlazorMotion.csproj" />
+</Solution>
