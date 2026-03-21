@@ -1,3 +1,4 @@
+using BlazorMotion.Engine;
 using BlazorMotion.Interop;
 using BlazorMotion.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,8 +17,11 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddBlazorMotion(this IServiceCollection services)
     {
-        // Core interop – one instance per DI scope (component tree)
+        // Slim browser-API interop bridge — one instance per DI scope
         services.AddScoped<MotionInterop>();
+
+        // C# animation engine — drives all animation math in WebAssembly
+        services.AddScoped<AnimationEngine>();
 
         // Higher-level services
         services.AddScoped<ScrollTracker>();

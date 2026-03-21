@@ -1,11 +1,10 @@
-using BlazorMotion.Models;
 using Microsoft.JSInterop;
 
 namespace BlazorMotion.Interop;
 
 /// <summary>
-/// Thin C# wrapper around the <c>BlazorMotion</c> JS object defined in
-/// <c>blazor-motion.js</c>. All public methods map 1-to-1 to their JS equivalents.
+/// Slim C# wrapper around the browser-API bridge in <c>blazor-motion.js</c>.
+/// Only calls browser-native APIs; all animation logic lives in the C# engine.
 /// </summary>
 public sealed class MotionInterop : IAsyncDisposable
 {
@@ -18,160 +17,108 @@ public sealed class MotionInterop : IAsyncDisposable
                 "import", "./_content/BlazorMotion/blazor-motion.js").AsTask());
     }
 
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
+    private async ValueTask<IJSObjectReference> Module() => await _moduleTask.Value;
+
+    // ── rAF loop ──────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Register an element with the animation engine and optionally apply initial values.
+    /// Start the JS rAF loop. The loop calls <c>dotnetRef.invokeMethod('ComputeFrame', timestamp)</c>
+    /// synchronously each tick (Blazor WASM) and applies the returned style updates.
     /// </summary>
-    public async ValueTask InitAsync<T>(string elementId, DotNetObjectReference<T> dotNetRef, object config)
-        where T : class
+    public async ValueTask StartRafLoopAsync<T>(DotNetObjectReference<T> dotnetRef) where T : class
+        => await (await Module()).InvokeVoidAsync("startRafLoop", dotnetRef);
+
+    /// <summary>Stop the JS rAF loop.</summary>
+    public async ValueTask StopRafLoopAsync()
     {
-        var module = await _moduleTask.Value;
-        await module.InvokeVoidAsync("init", elementId, dotNetRef, config);
+        if (!_moduleTask.IsValueCreated) return;
+        await (await Module()).InvokeVoidAsync("stopRafLoop");
     }
 
-    /// <summary>Tear down all animations and event listeners for an element.</summary>
-    public async ValueTask DisposeElementAsync(string elementId)
+    // ── Style application ─────────────────────────────────────────────────────
+
+    /// <summary>Instantly apply a CSS styles object to a DOM element (for <c>set()</c> calls).</summary>
+    public async ValueTask ApplyStylesAsync(string elementId, object styles)
+        => await (await Module()).InvokeVoidAsync("applyStyles", elementId, styles);
+
+    // ── Element registration ──────────────────────────────────────────────────
+
+    public async ValueTask RegisterElementAsync(string elementId)
+        => await (await Module()).InvokeVoidAsync("registerElement", elementId);
+
+    public async ValueTask UnregisterElementAsync(string elementId)
     {
-        var module = await _moduleTask.Value;
-        await module.InvokeVoidAsync("dispose", elementId);
+        if (!_moduleTask.IsValueCreated) return;
+        await (await Module()).InvokeVoidAsync("unregisterElement", elementId);
     }
 
-    // ── Animation ─────────────────────────────────────────────────────────────
-
-    /// <summary>Animate an element to the given values.</summary>
-    public async ValueTask AnimateToAsync(string elementId, object values, object? transition)
-    {
-        var module = await _moduleTask.Value;
-        await module.InvokeVoidAsync("animateTo", elementId, values, transition);
-    }
+    // ── Gesture event listeners ───────────────────────────────────────────────
 
     /// <summary>
-    /// Animate to values and return a Task that completes when all properties finish.
+    /// Attach pointer / focus / drag event listeners to an element.
+    /// JS forwards raw browser events to the DotNet ref via async callbacks.
     /// </summary>
-    public async ValueTask AnimateToAwaitAsync(string elementId, object values, object? transition)
+    public async ValueTask AttachEventListenersAsync<T>(
+        string elementId, object events, DotNetObjectReference<T> dotnetRef) where T : class
+        => await (await Module()).InvokeVoidAsync("attachEventListeners", elementId, events, dotnetRef);
+
+    // ── Viewport observation ──────────────────────────────────────────────────
+
+    public async ValueTask ObserveViewportAsync<T>(
+        string elementId, DotNetObjectReference<T> dotnetRef, bool once) where T : class
+        => await (await Module()).InvokeVoidAsync("observeViewport", elementId, dotnetRef, once);
+
+    public async ValueTask UnobserveViewportAsync(string elementId)
     {
-        var module = await _moduleTask.Value;
-        await module.InvokeVoidAsync("animateToAwait", elementId, values, transition);
+        if (!_moduleTask.IsValueCreated) return;
+        await (await Module()).InvokeVoidAsync("unobserveViewport", elementId);
     }
 
-    /// <summary>Animate one or more properties along a keyframe sequence.</summary>
-    public async ValueTask AnimateKeyframesAsync(
-        string elementId, string property, double[] frames, object? transition)
-    {
-        var module = await _moduleTask.Value;
-        await module.InvokeVoidAsync("animateKeyframes", elementId, property, frames, transition);
-    }
+    // ── FLIP layout ───────────────────────────────────────────────────────────
 
-    /// <summary>Instantly set values with no animation.</summary>
-    public async ValueTask SetAsync(string elementId, object values)
-    {
-        var module = await _moduleTask.Value;
-        await module.InvokeVoidAsync("set", elementId, values);
-    }
+    /// <summary>Returns the element's current bounding rect (for C# FLIP delta computation).</summary>
+    public async ValueTask<BoundingRect?> GetBoundingRectAsync(string elementId)
+        => await (await Module()).InvokeAsync<BoundingRect?>("getBoundingRect", elementId);
 
-    /// <summary>Stop running animations on specific properties (or all if none specified).</summary>
-    public async ValueTask StopAsync(string elementId, string[]? properties = null)
-    {
-        var module = await _moduleTask.Value;
-        await module.InvokeVoidAsync("stop", elementId, (object?)properties);
-    }
-
-    // ── Gestures ─────────────────────────────────────────────────────────────
-
-    /// <summary>Attach hover / tap / focus / drag gesture handlers.</summary>
-    public async ValueTask AttachGesturesAsync(string elementId, object gestureOptions)
-    {
-        var module = await _moduleTask.Value;
-        await module.InvokeVoidAsync("attachGestures", elementId, gestureOptions);
-    }
-
-    // ── Layout (FLIP) ─────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Snapshot the element's current bounding rect (call BEFORE Blazor re-renders).
-    /// </summary>
-    public async ValueTask CaptureLayoutAsync(string elementId)
-    {
-        var module = await _moduleTask.Value;
-        await module.InvokeVoidAsync("captureLayout", elementId);
-    }
-
-    /// <summary>
-    /// Play a FLIP animation from the snapshot to the current layout (call AFTER re-render).
-    /// </summary>
-    public async ValueTask PlayLayoutAnimationAsync(string elementId, object? transition)
-    {
-        var module = await _moduleTask.Value;
-        await module.InvokeVoidAsync("playLayoutAnimation", elementId, transition);
-    }
+    /// <summary>Run a FLIP animation via the Web Animations API.</summary>
+    public async ValueTask PlayWaapiFlipAsync(
+        string elementId, double dx, double dy, double sx, double sy,
+        double durationMs, string easingStr, string? finalTransform)
+        => await (await Module()).InvokeVoidAsync(
+            "playWaapiFlip", elementId, dx, dy, sx, sy, durationMs, easingStr, finalTransform);
 
     // ── Scroll ────────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Start observing scroll events on a container element (or the window if null).
-    /// The DotNet ref will receive <c>OnScroll(ScrollInfo)</c> callbacks.
-    /// </summary>
-    public async ValueTask<string> ObserveScrollAsync<T>(
-        string? containerId, DotNetObjectReference<T> dotNetRef)
-        where T : class
+    public async ValueTask<string?> ObserveScrollAsync<T>(
+        string? containerId, DotNetObjectReference<T> dotnetRef) where T : class
+        => await (await Module()).InvokeAsync<string?>("observeScroll", containerId, dotnetRef);
+
+    public async ValueTask UnobserveScrollAsync(string key)
     {
-        var module = await _moduleTask.Value;
-        return await module.InvokeAsync<string>("observeScroll", containerId, dotNetRef);
+        if (!_moduleTask.IsValueCreated) return;
+        await (await Module()).InvokeVoidAsync("unobserveScroll", key);
     }
 
-    /// <summary>Stop observing scroll events for a subscription key.</summary>
-    public async ValueTask UnobserveScrollAsync(string subscriptionKey)
-    {
-        var module = await _moduleTask.Value;
-        await module.InvokeVoidAsync("unobserveScroll", subscriptionKey);
-    }
-
-    /// <summary>
-    /// Observe element scroll-progress (how far an element has scrolled through the viewport).
-    /// </summary>
-    public async ValueTask<string> ObserveElementScrollAsync<T>(
-        string elementId, DotNetObjectReference<T> dotNetRef, string[]? offset = null)
-        where T : class
-    {
-        var module = await _moduleTask.Value;
-        return await module.InvokeAsync<string>("observeElementScroll", elementId, dotNetRef, offset);
-    }
-
-    // ── Motion Values ─────────────────────────────────────────────────────────
-
-    public async ValueTask CreateMotionValueAsync(string valueId, double initial)
-    {
-        var module = await _moduleTask.Value;
-        await module.InvokeVoidAsync("createMotionValue", valueId, initial);
-    }
-
-    public async ValueTask SetMotionValueAsync(string valueId, double value)
-    {
-        var module = await _moduleTask.Value;
-        await module.InvokeVoidAsync("setMotionValue", valueId, value);
-    }
-
-    public async ValueTask<double> GetMotionValueAsync(string valueId)
-    {
-        var module = await _moduleTask.Value;
-        return await module.InvokeAsync<double>("getMotionValue", valueId);
-    }
-
-    public async ValueTask DestroyMotionValueAsync(string valueId)
-    {
-        var module = await _moduleTask.Value;
-        await module.InvokeVoidAsync("destroyMotionValue", valueId);
-    }
+    public async ValueTask<string?> ObserveElementScrollAsync<T>(
+        string elementId, DotNetObjectReference<T> dotnetRef) where T : class
+        => await (await Module()).InvokeAsync<string?>("observeElementScroll", elementId, dotnetRef);
 
     // ── Dispose ───────────────────────────────────────────────────────────────
 
     public async ValueTask DisposeAsync()
     {
         if (_moduleTask.IsValueCreated)
-        {
-            var module = await _moduleTask.Value;
-            await module.DisposeAsync();
-        }
+            await (await Module()).DisposeAsync();
     }
+}
+
+/// <summary>DOM bounding rect returned by <c>getBoundingRect</c> in JS.</summary>
+public sealed class BoundingRect
+{
+    public double X      { get; set; }
+    public double Y      { get; set; }
+    public double Width  { get; set; }
+    public double Height { get; set; }
+    public double Top    { get; set; }
+    public double Left   { get; set; }
 }

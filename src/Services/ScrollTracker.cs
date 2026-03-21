@@ -76,6 +76,6 @@ public sealed class ScrollTracker : IAsyncDisposable
             await _interop.UnobserveScrollAsync(key);
         _subscriptionKeys.Clear();
         _dotnet?.Dispose();
-        await _interop.DisposeAsync();
+        // Note: MotionInterop itself is DI-scoped and disposed by the DI container
     }
 }

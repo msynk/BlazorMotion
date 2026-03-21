@@ -1,61 +1,49 @@
-using BlazorMotion.Components;
-using BlazorMotion.Interop;
+using BlazorMotion.Engine;
 using BlazorMotion.Models;
-using BlazorMotion.Services;
-using Microsoft.JSInterop;
 
 namespace BlazorMotion.Services;
 
 /// <summary>
 /// Programmatic animation controller.
 /// Analogous to Framer Motion's <c>useAnimate()</c>.
-/// Obtain via DI (<c>@inject AnimationController</c>) and bind to an element
-/// using <c>&lt;Motion @ref="_ctrl.Element" /&gt;</c> or target by element ID.
+/// Obtain via DI (<c>@inject AnimationController</c>) and bind to an element ID.
+/// All animation math runs in the C# <see cref="AnimationEngine"/>.
 /// </summary>
-public sealed class AnimationController : IAsyncDisposable
+public sealed class AnimationController
 {
-    private readonly MotionInterop _interop;
+    private readonly AnimationEngine _engine;
     private string? _elementId;
 
-    public AnimationController(MotionInterop interop) => _interop = interop;
+    public AnimationController(AnimationEngine engine) => _engine = engine;
 
     /// <summary>Bind by element ID.</summary>
     public void BindTo(string elementId) => _elementId = elementId;
 
-    /// <summary>Animate the bound element to the given props.</summary>
+    /// <summary>Animate the bound element to the given props (fire-and-forget).</summary>
     public async ValueTask AnimateAsync(AnimationProps props, TransitionConfig? transition = null)
     {
         if (_elementId == null) return;
-        await _interop.AnimateToAsync(_elementId, props.ToJsDictionary(), transition?.ToJsObject());
+        await _engine.AnimateToAsync(_elementId, props.ToJsDictionary(), transition);
     }
 
     /// <summary>Animate and await completion.</summary>
     public async ValueTask AnimateAwaitAsync(AnimationProps props, TransitionConfig? transition = null)
     {
         if (_elementId == null) return;
-        await _interop.AnimateToAwaitAsync(_elementId, props.ToJsDictionary(), transition?.ToJsObject());
+        await _engine.AnimateToAwaitAsync(_elementId, props.ToJsDictionary(), transition);
     }
 
     /// <summary>Instantly set props without animation.</summary>
-    public async ValueTask SetAsync(AnimationProps props)
+    public void Set(AnimationProps props)
     {
         if (_elementId == null) return;
-        await _interop.SetAsync(_elementId, props.ToJsDictionary());
+        _engine.SetInstant(_elementId, props.ToJsDictionary());
     }
 
     /// <summary>Stop animations on the bound element.</summary>
-    public async ValueTask StopAsync(params string[] properties)
+    public void Stop(params string[] properties)
     {
         if (_elementId == null) return;
-        await _interop.StopAsync(_elementId, properties.Length > 0 ? properties : null);
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_elementId != null)
-        {
-            try { await _interop.DisposeElementAsync(_elementId); } catch { /* ignore */ }
-        }
-        await _interop.DisposeAsync();
+        _engine.Stop(_elementId, properties.Length > 0 ? properties : null);
     }
 }

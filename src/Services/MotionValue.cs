@@ -1,26 +1,20 @@
-using BlazorMotion.Interop;
-using Microsoft.JSInterop;
-
 namespace BlazorMotion.Services;
 
 /// <summary>
 /// A reactive numeric value whose changes can be observed and linked to animations.
 /// Analogous to Framer Motion's <c>MotionValue&lt;T&gt;</c>.
-///
-/// Create via <see cref="MotionValueFactory"/> or resolve from DI.
+/// Purely C# — no JS synchronisation required.
 /// </summary>
-public class MotionValue<T> : IAsyncDisposable where T : struct
+public class MotionValue<T> : IDisposable where T : struct
 {
     private readonly string _id;
-    private readonly MotionInterop? _interop;
     private T _value;
     private readonly List<Func<T, Task>> _subscribers = new();
 
-    internal MotionValue(string id, T initial, MotionInterop? interop)
+    internal MotionValue(string id, T initial)
     {
-        _id      = id;
-        _value   = initial;
-        _interop = interop;
+        _id    = id;
+        _value = initial;
     }
 
     // ── Value access ──────────────────────────────────────────────────────────
@@ -37,8 +31,6 @@ public class MotionValue<T> : IAsyncDisposable where T : struct
         _value = value;
         foreach (var sub in _subscribers)
             await sub(value);
-        if (_interop != null && value is double d)
-            await _interop.SetMotionValueAsync(_id, d);
     }
 
     // ── Subscriptions ─────────────────────────────────────────────────────────
@@ -62,14 +54,13 @@ public class MotionValue<T> : IAsyncDisposable where T : struct
     /// </summary>
     public MotionValue<TOut> Transform<TOut>(Func<T, TOut> fn) where TOut : struct
     {
-        var derived = new MotionValue<TOut>($"{_id}_t", fn(_value), null);
+        var derived = new MotionValue<TOut>($"{_id}_t", fn(_value));
         Subscribe(async v => await derived.SetAsync(fn(v)));
         return derived;
     }
 
     /// <summary>
     /// Map from an input range to an output range using linear interpolation.
-    /// e.g. progress.Transform([0,1], [0, 100]) → pixel offset.
     /// </summary>
     public MotionValue<double> Transform(double[] inputRange, double[] outputRange)
     {
@@ -90,17 +81,12 @@ public class MotionValue<T> : IAsyncDisposable where T : struct
             return x < inputRange[0] ? outputRange[0] : outputRange[^1];
         }
 
-        var derived = new MotionValue<double>($"{_id}_tr", Map(_value), null);
+        var derived = new MotionValue<double>($"{_id}_tr", Map(_value));
         Subscribe(async v => await derived.SetAsync(Map(v)));
         return derived;
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        _subscribers.Clear();
-        if (_interop != null)
-            await _interop.DestroyMotionValueAsync(_id);
-    }
+    public void Dispose() => _subscribers.Clear();
 
     private sealed class Subscription : IDisposable
     {
@@ -110,10 +96,9 @@ public class MotionValue<T> : IAsyncDisposable where T : struct
     }
 }
 
-/// <summary>Factory helper for creating MotionValues without DI.</summary>
+/// <summary>Factory helper for creating MotionValues.</summary>
 public static class MotionValueFactory
 {
-    /// <summary>Create a MotionValue that is purely C#-side (no JS sync).</summary>
     public static MotionValue<T> Create<T>(T initial) where T : struct
-        => new($"mv_{Guid.NewGuid():N}", initial, null);
+        => new($"mv_{Guid.NewGuid():N}", initial);
 }
