@@ -26,6 +26,7 @@ public static class ServiceCollectionExtensions
         // Higher-level services
         services.AddScoped<ScrollTracker>();
         services.AddTransient<AnimationController>();
+        services.AddScoped<MotionAnimateService>();
 
         return services;
     }

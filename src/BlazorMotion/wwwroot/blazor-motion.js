@@ -81,6 +81,36 @@ export function registerElement(elementId) {
     if (el) el.setAttribute('data-bmid', elementId);
 }
 
+// 
+// Programmatic animate() API — resolve elements by CSS selector or ElementReference
+// Assigns a stable id + data-bmid so the engine can address them via getElementById.
+// 
+
+let _programmaticSeq = 0;
+
+function _ensureElementId(el) {
+    const existing = el.getAttribute('data-bmid');
+    if (existing) return existing;
+    const id = el.id || ('bm-p' + (++_programmaticSeq));
+    el.id = id;
+    el.setAttribute('data-bmid', id);
+    return id;
+}
+
+/** Resolve all elements matching a CSS selector and return their element IDs. */
+export function resolveOrRegisterBySelector(selector) {
+    try {
+        return Array.from(document.querySelectorAll(selector)).map(el => _ensureElementId(el));
+    } catch {
+        return [];
+    }
+}
+
+/** Resolve the element for a Blazor ElementReference and return its element ID. */
+export function resolveOrRegisterByRef(element) {
+    return _ensureElementId(element);
+}
+
 export function unregisterElement(elementId) {
     const el = document.getElementById(elementId);
     if (el) el.removeAttribute('data-bmid');

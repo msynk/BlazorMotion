@@ -1,0 +1,265 @@
+@page "/docs/programmatic-animate"
+@inject MotionAnimateService Motion
+
+<PageTitle>Programmatic animate() — BlazorMotion</PageTitle>
+
+<div class="breadcrumb">Docs / <span>Programmatic animate()</span></div>
+<h1>Programmatic animate()</h1>
+<p>
+    <code>MotionAnimateService</code> provides a method-based API for animating <em>any</em>
+    DOM element — without wrapping it in a <code>&lt;Motion&gt;</code> component.
+    Select elements with a CSS selector string or reference them directly with a Blazor
+    <code>ElementReference</code>, just like the
+    <a href="https://motion.dev/docs/quick-start" target="_blank">motion.dev <code>animate()</code></a>
+    function.
+</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>Setup</h2>
+<p><code>MotionAnimateService</code> is registered automatically by <code>AddBlazorMotion()</code>. Inject it into any component:</p>
+<pre><code>@@inject MotionAnimateService Motion</code></pre>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>Animate by CSS selector</h2>
+<p>
+    Pass any CSS selector string as the first argument. <em>All</em> matching elements are
+    animated simultaneously. Elements do not need a <code>data-bmid</code> attribute or an
+    explicit <code>id</code> — BlazorMotion assigns stable IDs automatically.
+</p>
+<pre><code>// Animate a single element by id
+await Motion.AnimateAsync("#hero", new AnimationProps { Opacity = 1, Y = 0 });
+
+// Animate every element matching a class
+await Motion.AnimateAsync(".card", new AnimationProps { Scale = 1.05 });
+
+// Pass a transition
+await Motion.AnimateAsync(".box",
+    new AnimationProps { X = 100, BackgroundColor = "#6c47ff" },
+    new TransitionConfig { Duration = 0.5, Ease = Easing.BackOut });</code></pre>
+
+<div class="demo-area" style="display:flex;flex-direction:column;align-items:center;gap:1.25rem;">
+    <div id="pd-selector-box" class="demo-box" style="background:#6c47ff">selector</div>
+    <button class="demo-button" @onclick="DemoSelector">&#9654; Animate #pd-selector-box</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>Animate by ElementReference</h2>
+<p>
+    Capture any element with <code>@@ref</code> and pass the <code>ElementReference</code>
+    directly. No CSS selector or <code>id</code> needed.
+</p>
+<pre><code>&lt;div @@ref="_box" class="box"&gt;&lt;/div&gt;
+
+@@code {
+    private ElementReference _box;
+
+    private async Task Animate() =&gt;
+        await Motion.AnimateAsync(_box,
+            new AnimationProps { Scale = 1.2, Rotate = 15 },
+            TransitionConfig.Spring());
+}</code></pre>
+
+<div class="demo-area" style="display:flex;flex-direction:column;align-items:center;gap:1.25rem;">
+    <div @ref="_refBox" class="demo-box" style="background:#ff4785">ElementRef</div>
+    <button class="demo-button" @onclick="DemoRef">&#9654; Animate by ElementReference</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>AnimationControls</h2>
+<p>
+    Both overloads return an <code>AnimationControls</code> object. It is <strong>directly
+    awaitable</strong> — use <code>await</code> to wait for the animation to finish, or
+    hold on to it to stop early.
+</p>
+<pre><code>// Fire-and-forget
+_ = Motion.AnimateAsync(".box", new AnimationProps { X = 100 });
+
+// Await completion (animation plays entirely before continuing)
+await Motion.AnimateAsync(".box", new AnimationProps { X = 100 });
+
+// Stop early
+var controls = await Motion.AnimateAsync(".box",
+    new AnimationProps { X = 200 },
+    new TransitionConfig { Duration = 2.0 });
+
+await Task.Delay(500);
+controls.Stop(); // snaps to current (intermediate) position
+
+// Also available
+await controls.WhenCompleteAsync(); // same as awaiting controls directly</code></pre>
+
+<div class="demo-area" style="display:flex;flex-direction:column;align-items:center;gap:1.25rem;">
+    <div id="pd-controls-box" class="demo-box" style="background:#6c47ff">controls</div>
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;">
+        <button class="demo-button" @onclick="DemoAwait" disabled="@_awaitRunning">&#9654; Await completion</button>
+        <button class="demo-button" @onclick="DemoStop" disabled="@(!_awaitRunning)">&#9646;&#9646; Stop early</button>
+    </div>
+    @if (_awaitStatus != null)
+    {
+        <span style="font-size:0.85rem;opacity:0.7">@_awaitStatus</span>
+    }
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>Stagger multiple elements</h2>
+<p>
+    Use a class selector together with <code>StaggerChildren</code> on the transition to
+    apply a time offset between each matched element. The elements animate in DOM order.
+</p>
+<pre><code>&lt;!-- Five plain divs with a shared class --&gt;
+@@for (int i = 0; i &lt; 5; i++)
+{
+    &lt;div class="item"&gt;&lt;/div&gt;
+}
+
+@@code {
+    private async Task Stagger() =&gt;
+        await Motion.AnimateAsync(".item",
+            new AnimationProps { Y = -40, Scale = 1.15, BackgroundColor = "#ff4785" },
+            new TransitionConfig { Duration = 0.4, Ease = Easing.BackOut, StaggerChildren = 0.08 });
+}</code></pre>
+
+<div class="demo-area" style="display:flex;flex-direction:column;align-items:center;gap:1.25rem;">
+    <div style="display:flex;gap:0.5rem;align-items:flex-end;">
+        @for (int i = 0; i < 5; i++)
+        {
+            <div class="demo-stagger-item" style="width:44px;height:44px;border-radius:8px;background:#6c47ff"></div>
+        }
+    </div>
+    <button class="demo-button" @onclick="DemoStagger">&#9654; Stagger animate</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>MotionAnimateService API</h2>
+<table class="prop-table">
+    <thead>
+        <tr><th>Method</th><th>First argument</th><th>Returns</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>AnimateAsync</td>
+            <td><code>string selector</code></td>
+            <td><code>ValueTask&lt;AnimationControls&gt;</code></td>
+            <td>Animate all elements matching the CSS selector.</td>
+        </tr>
+        <tr>
+            <td>AnimateAsync</td>
+            <td><code>ElementReference</code></td>
+            <td><code>ValueTask&lt;AnimationControls&gt;</code></td>
+            <td>Animate the single element captured by <code>@@ref</code>.</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>AnimationControls API</h2>
+<table class="prop-table">
+    <thead>
+        <tr><th>Member</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Stop()</td><td>Cancel all running animations. Elements remain at their current (intermediate) position.</td></tr>
+        <tr><td>Complete()</td><td>Cancel all running animations. Elements remain at their current position (same as Stop — snap-to-end can be composed by calling AnimateAsync again with zero duration).</td></tr>
+        <tr><td>WhenCompleteAsync()</td><td>Returns a <code>Task</code> that resolves when all targeted animations finish naturally.</td></tr>
+        <tr><td>GetAwaiter()</td><td>Makes the object directly <code>await</code>able.</td></tr>
+    </tbody>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>How it works</h2>
+<p>
+    When you call <code>AnimateAsync</code>, the service calls into the JavaScript bridge to
+    resolve the target elements from the DOM, assigns each a stable <code>id</code> and
+    <code>data-bmid</code> attribute (if not already present), and registers them with the
+    C# <code>AnimationEngine</code>. From that point on, animations run entirely in WebAssembly
+    — the same engine that powers the <code>&lt;Motion&gt;</code> component.
+</p>
+
+<div class="callout callout-tip">
+    <strong>Tip:</strong> Mix the method-based API and the <code>&lt;Motion&gt;</code> component
+    freely. The same <code>AnimationEngine</code> instance manages both, so there is no overhead
+    or conflict.
+</div>
+
+<div class="callout callout-note">
+    <strong>Timing:</strong> Always call <code>AnimateAsync</code> inside or after
+    <code>OnAfterRenderAsync</code> so the target elements exist in the DOM.
+</div>
+
+@code {
+    // ── Selector demo ────────────────────────────────────────────────────────
+    private bool _selectorToggled;
+
+    private async Task DemoSelector()
+    {
+        _selectorToggled = !_selectorToggled;
+        await Motion.AnimateAsync("#pd-selector-box",
+            _selectorToggled
+                ? new AnimationProps { X = 70, Rotate = 30, BackgroundColor = "#ff4785" }
+                : new AnimationProps { X = 0, Rotate = 0, BackgroundColor = "#6c47ff" },
+            new TransitionConfig { Duration = 0.5, Ease = Easing.BackOut });
+    }
+
+    // ── ElementReference demo ────────────────────────────────────────────────
+    private ElementReference _refBox;
+    private bool _refToggled;
+
+    private async Task DemoRef()
+    {
+        _refToggled = !_refToggled;
+        await Motion.AnimateAsync(_refBox,
+            _refToggled
+                ? new AnimationProps { Scale = 1.25, Y = -20, BackgroundColor = "#6c47ff" }
+                : new AnimationProps { Scale = 1, Y = 0, BackgroundColor = "#ff4785" },
+            TransitionConfig.Spring());
+    }
+
+    // ── AnimationControls demo ───────────────────────────────────────────────
+    private bool _awaitRunning;
+    private string? _awaitStatus;
+    private AnimationControls? _runningControls;
+
+    private async Task DemoAwait()
+    {
+        _awaitRunning = true;
+        _awaitStatus = "Animating…";
+        StateHasChanged();
+
+        _runningControls = await Motion.AnimateAsync("#pd-controls-box",
+            new AnimationProps { X = 120, Rotate = 360, Scale = 1.2 },
+            new TransitionConfig { Duration = 2.0, Ease = Easing.EaseInOut });
+
+        await _runningControls;
+
+        _awaitRunning = false;
+        _awaitStatus = "Done! (returned to start)";
+        _runningControls = null;
+
+        await Motion.AnimateAsync("#pd-controls-box",
+            new AnimationProps { X = 0, Rotate = 0, Scale = 1 },
+            new TransitionConfig { Duration = 0.3 });
+
+        StateHasChanged();
+    }
+
+    private void DemoStop()
+    {
+        _runningControls?.Stop();
+        _runningControls = null;
+        _awaitRunning = false;
+        _awaitStatus = "Stopped at current position.";
+        StateHasChanged();
+    }
+
+    // ── Stagger demo ─────────────────────────────────────────────────────────
+    private bool _staggerToggled;
+
+    private async Task DemoStagger()
+    {
+        _staggerToggled = !_staggerToggled;
+        await Motion.AnimateAsync(".demo-stagger-item",
+            _staggerToggled
+                ? new AnimationProps { Y = -36, Scale = 1.15, BackgroundColor = "#ff4785" }
+                : new AnimationProps { Y = 0, Scale = 1, BackgroundColor = "#6c47ff" },
+            new TransitionConfig { Duration = 0.4, Ease = Easing.BackOut, StaggerChildren = 0.08 });
+    }
+}

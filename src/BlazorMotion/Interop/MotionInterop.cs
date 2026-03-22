@@ -1,4 +1,5 @@
 using BlazorMotion.Models;
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
 namespace BlazorMotion.Interop;
@@ -108,6 +109,22 @@ public sealed class MotionInterop : IAsyncDisposable
     public async ValueTask<string?> ObserveElementScrollAsync<T>(
         string elementId, DotNetObjectReference<T> dotnetRef) where T : class
         => await (await Module()).InvokeAsync<string?>("observeElementScroll", elementId, dotnetRef);
+
+    // ── Programmatic animate() API ─────────────────────────────────────────────
+
+    /// <summary>
+    /// Resolves all DOM elements matching <paramref name="selector"/>, assigns stable IDs
+    /// if needed, and returns those IDs so the <see cref="Engine.AnimationEngine"/> can address them.
+    /// </summary>
+    public async ValueTask<string[]> ResolveOrRegisterBySelectorAsync(string selector)
+        => await (await Module()).InvokeAsync<string[]>("resolveOrRegisterBySelector", selector);
+
+    /// <summary>
+    /// Resolves the DOM element for <paramref name="elementReference"/>, assigns a stable ID
+    /// if needed, and returns that ID.
+    /// </summary>
+    public async ValueTask<string> ResolveOrRegisterByRefAsync(ElementReference elementReference)
+        => await (await Module()).InvokeAsync<string>("resolveOrRegisterByRef", elementReference);
 
     // ── Dispose ───────────────────────────────────────────────────────────────
 

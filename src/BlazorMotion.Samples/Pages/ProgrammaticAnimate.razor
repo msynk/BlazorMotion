@@ -1,0 +1,140 @@
+@page "/programmatic"
+@inject MotionAnimateService Motion
+
+<div class="demo-section">
+    <h2>Programmatic <code>AnimateAsync</code></h2>
+    <p>
+        Call <code>Motion.AnimateAsync()</code> with a CSS selector or an
+        <code>ElementReference</code> — no <code>&lt;Motion&gt;</code> wrapper needed.
+    </p>
+
+    <div class="demo-row">
+        <div class="demo-card">
+            <div id="selector-box" class="box" style="background:#6c47ff"></div>
+        </div>
+        <div class="demo-card">
+            <div @ref="_refBox" class="box" style="background:#ff4785"></div>
+        </div>
+    </div>
+
+    <div style="display:flex;gap:0.75rem;margin-top:1rem;flex-wrap:wrap">
+        <button class="btn-bm" @onclick="AnimateBySelector">
+            Animate by selector (#selector-box)
+        </button>
+        <button class="btn-bm" @onclick="AnimateByRef">
+            Animate by ElementReference
+        </button>
+        <button class="btn-bm" @onclick="AnimateBoth">
+            Animate both + await
+        </button>
+        <button class="btn-bm" @onclick="StopAll" disabled="@(_controls == null)">
+            Stop
+        </button>
+    </div>
+
+    @if (_status != null)
+    {
+        <p style="margin-top:0.75rem;opacity:0.75;font-size:0.9rem">@_status</p>
+    }
+</div>
+
+<div class="demo-section">
+    <h2>Stagger via selector</h2>
+    <p>
+        All <code>.stagger-item</code> elements are selected at once.
+        A <code>StaggerChildren</code> delay in the transition spreads the animation.
+    </p>
+    <div class="demo-row" style="gap:0.5rem">
+        @for (int i = 0; i < 5; i++)
+        {
+            <div class="box stagger-item" style="background:#6c47ff;width:48px;height:48px"></div>
+        }
+    </div>
+    <button class="btn-bm" style="margin-top:1rem" @onclick="AnimateStagger">
+        Stagger animate
+    </button>
+</div>
+
+@code {
+    private ElementReference _refBox;
+    private AnimationControls? _controls;
+    private string? _status;
+
+    private bool _selectorToggled;
+    private bool _refToggled;
+    private bool _staggerToggled;
+
+    private async Task AnimateBySelector()
+    {
+        _selectorToggled = !_selectorToggled;
+        var target = _selectorToggled
+            ? new AnimationProps { X = 80, Rotate = 45, BackgroundColor = "#ff4785" }
+            : new AnimationProps { X = 0, Rotate = 0, BackgroundColor = "#6c47ff" };
+
+        _controls = await Motion.AnimateAsync("#selector-box", target,
+            new TransitionConfig { Duration = 0.5, Ease = Easing.BackOut });
+    }
+
+    private async Task AnimateByRef()
+    {
+        _refToggled = !_refToggled;
+        var target = _refToggled
+            ? new AnimationProps { Scale = 1.3, Y = -30, BackgroundColor = "#6c47ff" }
+            : new AnimationProps { Scale = 1, Y = 0, BackgroundColor = "#ff4785" };
+
+        _controls = await Motion.AnimateAsync(_refBox, target, TransitionConfig.Spring());
+    }
+
+    private async Task AnimateBoth()
+    {
+        _status = "Animating…";
+        StateHasChanged();
+
+        var t = new TransitionConfig { Duration = 0.8, Ease = Easing.EaseInOut };
+
+        var c1 = await Motion.AnimateAsync("#selector-box",
+            new AnimationProps { X = 0, Rotate = 360, Opacity = 0.4 }, t);
+        var c2 = await Motion.AnimateAsync(_refBox,
+            new AnimationProps { Scale = 0.5, Opacity = 0.4 }, t);
+
+        _controls = c1; // keep a reference so Stop works
+
+        await Task.WhenAll(c1.WhenCompleteAsync(), c2.WhenCompleteAsync());
+
+        // Return to base state
+        await Motion.AnimateAsync("#selector-box",
+            new AnimationProps { X = 0, Rotate = 0, Opacity = 1 },
+            new TransitionConfig { Duration = 0.4 });
+        await Motion.AnimateAsync(_refBox,
+            new AnimationProps { Scale = 1, Opacity = 1 },
+            new TransitionConfig { Duration = 0.4 });
+
+        _status = "Done!";
+        _controls = null;
+        StateHasChanged();
+    }
+
+    private void StopAll()
+    {
+        _controls?.Stop();
+        _controls = null;
+        _status = "Stopped.";
+    }
+
+    private async Task AnimateStagger()
+    {
+        _staggerToggled = !_staggerToggled;
+        var target = _staggerToggled
+            ? new AnimationProps { Y = -40, Scale = 1.15, BackgroundColor = "#ff4785" }
+            : new AnimationProps { Y = 0, Scale = 1, BackgroundColor = "#6c47ff" };
+
+        var transition = new TransitionConfig
+        {
+            Duration = 0.45,
+            Ease = Easing.BackOut,
+            StaggerChildren = 0.08
+        };
+
+        await Motion.AnimateAsync(".stagger-item", target, transition);
+    }
+}
