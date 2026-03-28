@@ -161,6 +161,11 @@ public class AnimationProps
         if (Width != null) sb.Append($"width:{Width};");
         if (Height != null) sb.Append($"height:{Height};");
         if (BorderRadius != null) sb.Append($"border-radius:{BorderRadius};");
+        if (PathLength.HasValue)
+        {
+            double clamped = Math.Max(0, Math.Min(1, PathLength.Value));
+            sb.Append($"stroke-dasharray:1 1;stroke-dashoffset:{(1 - clamped).ToString("G6", System.Globalization.CultureInfo.InvariantCulture)};");
+        }
 
         if (CssVars != null)
             foreach (var kv in CssVars)

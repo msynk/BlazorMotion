@@ -164,7 +164,8 @@ pre code { background: none; border: none; padding: 0; font-size: inherit; color
     width: 80px; height: 80px; border-radius: 12px;
     background: linear-gradient(135deg, var(--accent2), var(--accent));
     display: flex; align-items: center; justify-content: center;
-    color: #fff; font-weight: 700; font-size: 1.1rem;
+    color: #fff; font-weight: 700; font-size: 0.85rem;
+    text-align: center; padding: 0 4px;
     cursor: pointer; user-select: none;
 }
 .demo-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; justify-content: center; }

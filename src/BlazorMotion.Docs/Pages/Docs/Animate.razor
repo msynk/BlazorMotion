@@ -45,7 +45,7 @@
         Animate="@@(new AnimationProps  { Opacity = 1, Scale = 1,   Y = 0 })"
         Transition="@@(new TransitionConfig { Duration = 0.4, Ease = Easing.EaseOut })" /&gt;</code></pre>
 
-<div class="demo-area" style="display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;">
+<div class="demo-area" style="display:flex;flex-direction:column;align-items:center;gap:2rem;">
     <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
         <Motion @key="_replayKey2"
                 Class="demo-box"
@@ -76,7 +76,7 @@
         </Motion>
         <span style="font-size:0.75rem;color:var(--text-muted)">Scale + BorderRadius</span>
     </div>
-    <button class="demo-button" style="align-self:flex-end;" @onclick="Replay2">&#9654; Replay</button>
+    <button class="demo-button" @onclick="Replay2">&#9654; Replay</button>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
@@ -105,7 +105,7 @@ new AnimationProps { SkewY = -10 }</code></pre>
 <h3>Perspective</h3>
 <pre><code>new AnimationProps { Perspective = 1200 }   // px, parent context depth</code></pre>
 
-<div class="demo-area" style="display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;">
+<div class="demo-area" style="display:flex;gap:2rem;flex-wrap:wrap;justify-content:center;flex-direction:column;align-items:center;">
     @foreach (var (label, init, anim) in _transformDemos)
     {
         <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
@@ -119,7 +119,7 @@ new AnimationProps { SkewY = -10 }</code></pre>
             <span style="font-size:0.75rem;color:var(--text-muted)">@label</span>
         </div>
     }
-    <button class="demo-button" style="align-self:flex-end;" @onclick="Replay3">&#9654; Replay</button>
+    <button class="demo-button" @onclick="Replay3">&#9654; Replay</button>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
@@ -144,6 +144,7 @@ new AnimationProps { SkewY = -10 }</code></pre>
     <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
         <Motion @key="_replayKey4"
                 Class="demo-box"
+                Style="background-image:none;"
                 Initial="@(new AnimationProps { BackgroundColor = "#6c47ff" })"
                 Animate="@(new AnimationProps  { BackgroundColor = "#ff4785" })"
                 Transition="@(new TransitionConfig { Duration = 0.8, Ease = Easing.EaseInOut })">
@@ -188,7 +189,7 @@ new AnimationProps { SkewY = -10 }</code></pre>
             Repeat   = int.MaxValue
         })" /&gt;</code></pre>
 
-<div class="demo-area" style="display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;">
+<div class="demo-area" style="display:flex;gap:2rem;flex-wrap:wrap;justify-content:center;flex-direction:column;align-items:center;">
     <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
         <Motion Class="demo-box"
                 Animate="@(new AnimationProps
@@ -231,6 +232,7 @@ new AnimationProps { SkewY = -10 }</code></pre>
     </div>
     <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
         <Motion Class="demo-box"
+                Style="background-image:none;"
                 Animate="@(new AnimationProps
                 {
                     Keyframes = new Dictionary<string, object>
@@ -267,7 +269,7 @@ new TransitionConfig { Repeat = int.MaxValue, RepeatType = RepeatType.Mirror }
 // Pause between repeats
 new TransitionConfig { Repeat = 5, RepeatDelay = 0.5 }</code></pre>
 
-<div class="demo-area" style="display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;">
+<div class="demo-area" style="display:flex;gap:2rem;flex-wrap:wrap;justify-content:center;flex-direction:column;align-items:center;">
     <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
         <Motion Class="demo-box"
                 Initial="@(new AnimationProps { X = -40 })"

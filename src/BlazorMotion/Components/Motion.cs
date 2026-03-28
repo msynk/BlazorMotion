@@ -114,6 +114,10 @@ public class Motion : ComponentBase, IAsyncDisposable
         if (AdditionalAttributes != null)
             builder.AddMultipleAttributes(seq++, AdditionalAttributes);
 
+        // Auto-inject pathLength="1" so normalized [0,1] dasharray coordinates work correctly
+        if (Tag == "path" && NeedsPathLengthAttr())
+            builder.AddAttribute(seq++, "pathLength", "1");
+
         if (!string.IsNullOrEmpty(Class))
             builder.AddAttribute(seq++, "class", Class);
 
@@ -495,6 +499,15 @@ public class Motion : ComponentBase, IAsyncDisposable
     // 
     // Helpers
     // 
+
+    private bool NeedsPathLengthAttr() =>
+        (AdditionalAttributes == null || !AdditionalAttributes.ContainsKey("pathLength")) &&
+        (HasPathLength(Initial) || HasPathLength(Animate) || HasPathLength(Exit) ||
+         HasPathLength(WhileHover) || HasPathLength(WhileTap) || HasPathLength(WhileFocus) ||
+         HasPathLength(WhileInView) || HasPathLength(WhileDrag));
+
+    private static bool HasPathLength(AnimationTarget? t) =>
+        t?.Props?.PathLength != null;
 
     private AnimationProps? ResolveProps(AnimationTarget? target)
     {
