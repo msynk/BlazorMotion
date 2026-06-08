@@ -4,6 +4,18 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!--
+      Disable static web asset fingerprinting for this dev/sample app.
+      In .NET 10 standalone Blazor WASM, _framework assets (including the .pdb,
+      which changes every build) are fingerprinted by default. When the running
+      dev server and the browser's cached boot manifest drift by even one build,
+      the browser requests a fingerprinted filename the server no longer has,
+      producing a 404 whose empty body fails the SRI integrity check
+      (computed hash 47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=).
+      Stable filenames eliminate this entire class of caching/integrity errors.
+    -->
+    <WasmFingerprintAssets>false</WasmFingerprintAssets>
+    <StaticWebAssetFingerprintingEnabled>false</StaticWebAssetFingerprintingEnabled>
   </PropertyGroup>
 
   <ItemGroup>

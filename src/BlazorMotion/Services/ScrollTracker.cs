@@ -25,6 +25,7 @@ public sealed class ScrollTracker : IAsyncDisposable
     private readonly DotNetObjectReference<ScrollTracker> _dotnet;
 
     private Func<ScrollInfo, Task>? _onScroll;
+    private bool _disposed;
 
     public ScrollTracker(MotionInterop interop)
     {
@@ -48,6 +49,7 @@ public sealed class ScrollTracker : IAsyncDisposable
     /// <param name="onChange">Callback invoked on every scroll event.</param>
     public async Task ObserveAsync(string? containerId, Func<ScrollInfo, Task> onChange)
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         _onScroll = onChange;
         var key = await _interop.ObserveScrollAsync(containerId, _dotnet!);
         if (key != null) _subscriptionKeys.Add(key);
@@ -72,9 +74,13 @@ public sealed class ScrollTracker : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        if (_disposed) return;
+        _disposed = true;
+
         foreach (var key in _subscriptionKeys)
             await _interop.UnobserveScrollAsync(key);
         _subscriptionKeys.Clear();
+        _onScroll = null;
         _dotnet?.Dispose();
         // Note: MotionInterop itself is DI-scoped and disposed by the DI container
     }

@@ -24,7 +24,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<AnimationEngine>();
 
         // Higher-level services
-        services.AddScoped<ScrollTracker>();
+        // ScrollTracker is owned and disposed by the consuming component (like
+        // Framer Motion's per-component useScroll), so it must be transient.
+        // A scoped (app-lifetime in WASM) instance would be disposed by the first
+        // component to unmount, leaving its DotNetObjectReference disposed and
+        // causing ObjectDisposedException when another component re-observes.
+        services.AddTransient<ScrollTracker>();
         services.AddTransient<AnimationController>();
         services.AddScoped<MotionAnimateService>();
 
