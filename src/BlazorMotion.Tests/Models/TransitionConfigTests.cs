@@ -167,4 +167,94 @@ public class TransitionConfigTests
         Assert.Equal(4, config.EaseCubicBezier.Length);
         Assert.Equal(0.25, config.EaseCubicBezier[0]);
     }
+
+    // ── Clone ─────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void Clone_CopiesAllFields()
+    {
+        var original = new TransitionConfig
+        {
+            Type = TransitionType.Spring,
+            Duration = 0.7,
+            Delay = 0.2,
+            Ease = Easing.BackInOut,
+            EaseCubicBezier = [0.1, 0.2, 0.3, 0.4],
+            Repeat = int.MaxValue,
+            RepeatType = RepeatType.Mirror,
+            RepeatDelay = 0.15,
+            Times = [0, 0.5, 1],
+            Stiffness = 321,
+            Damping = 12,
+            Mass = 3,
+            Velocity = 42,
+            RestSpeed = 0.002,
+            RestDelta = 0.003,
+            Bounce = 0.4,
+            VisualDuration = 0.9,
+            InertiaVelocity = 500,
+            TimeConstant = 850,
+            Power = 0.6,
+            InertiaRestDelta = 0.25,
+            InertiaMin = -100,
+            InertiaMax = 100,
+            StaggerChildren = 0.08,
+            DelayChildren = 0.3,
+            When = WhenType.AfterChildren,
+            Properties = new Dictionary<string, TransitionConfig>
+            {
+                ["opacity"] = new TransitionConfig { Duration = 0.1 },
+            },
+        };
+
+        var clone = original.Clone();
+
+        Assert.Equal(original.Type, clone.Type);
+        Assert.Equal(original.Duration, clone.Duration);
+        Assert.Equal(original.Delay, clone.Delay);
+        Assert.Equal(original.Ease, clone.Ease);
+        Assert.Equal(original.EaseCubicBezier, clone.EaseCubicBezier);
+        Assert.Equal(original.Repeat, clone.Repeat);
+        Assert.Equal(original.RepeatType, clone.RepeatType);
+        Assert.Equal(original.RepeatDelay, clone.RepeatDelay);
+        Assert.Equal(original.Times, clone.Times);
+        Assert.Equal(original.Stiffness, clone.Stiffness);
+        Assert.Equal(original.Damping, clone.Damping);
+        Assert.Equal(original.Mass, clone.Mass);
+        Assert.Equal(original.Velocity, clone.Velocity);
+        Assert.Equal(original.RestSpeed, clone.RestSpeed);
+        Assert.Equal(original.RestDelta, clone.RestDelta);
+        Assert.Equal(original.Bounce, clone.Bounce);
+        Assert.Equal(original.VisualDuration, clone.VisualDuration);
+        Assert.Equal(original.InertiaVelocity, clone.InertiaVelocity);
+        Assert.Equal(original.TimeConstant, clone.TimeConstant);
+        Assert.Equal(original.Power, clone.Power);
+        Assert.Equal(original.InertiaRestDelta, clone.InertiaRestDelta);
+        Assert.Equal(original.InertiaMin, clone.InertiaMin);
+        Assert.Equal(original.InertiaMax, clone.InertiaMax);
+        Assert.Equal(original.StaggerChildren, clone.StaggerChildren);
+        Assert.Equal(original.DelayChildren, clone.DelayChildren);
+        Assert.Equal(original.When, clone.When);
+        Assert.Same(original.Properties, clone.Properties);
+    }
+
+    [Fact]
+    public void Clone_IsIndependent_ForScalarsAndArrays()
+    {
+        var original = new TransitionConfig
+        {
+            Duration = 0.3,
+            EaseCubicBezier = [0.1, 0.2, 0.3, 0.4],
+            Times = [0, 1],
+        };
+
+        var clone = original.Clone();
+        clone.Duration = 9.9;
+        clone.EaseCubicBezier![0] = 99;
+        clone.Times![0] = 99;
+
+        Assert.Equal(0.3, original.Duration);              // scalar untouched
+        Assert.Equal(0.1, original.EaseCubicBezier![0]);    // array deep-copied
+        Assert.Equal(0.0, original.Times![0]);              // array deep-copied
+    }
 }

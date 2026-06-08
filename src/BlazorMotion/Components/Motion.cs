@@ -198,6 +198,11 @@ public class Motion : ComponentBase, IAsyncDisposable
 
     private async Task InitialiseAsync()
     {
+        // Reduced-motion is opt-in: only probe the OS preference when this element is
+        // inside a <MotionConfig>. Elements without a config always animate normally.
+        if (ConfigCtx is not null)
+            await Engine.EnsureReducedMotionDetectedAsync();
+
         // Register with C# engine (applies initial values synchronously)
         var initProps = ResolveProps(Initial);
         Engine.RegisterElement(_id, initProps?.ToJsDictionary());
@@ -521,47 +526,52 @@ public class Motion : ComponentBase, IAsyncDisposable
         return null;
     }
 
+    /// <summary>
+    /// Resolves whether motion should be reduced for this element.
+    /// <para>
+    /// Reduced motion is <b>opt-in</b>: an element only reduces motion when it is inside a
+    /// <see cref="Components.MotionConfig"/>. Within one, an explicit
+    /// <see cref="MotionConfigContext.ReduceMotion"/> value (true/false) always wins; when it is
+    /// <c>null</c> the OS <c>prefers-reduced-motion</c> preference is respected. Elements with no
+    /// surrounding config always animate, so the OS preference never silently disables animations
+    /// an app didn't opt into.
+    /// </para>
+    /// </summary>
+    private bool ShouldReduceMotion()
+    {
+        if (ConfigCtx is null) return false;
+        return ConfigCtx.ReduceMotion ?? Engine.OsPrefersReducedMotion;
+    }
+
+    /// <summary>An instant (zero-duration) transition used when motion is reduced.</summary>
+    private static TransitionConfig InstantTransition()
+        => new() { Type = TransitionType.Tween, Duration = 0, Delay = 0 };
+
     private TransitionConfig? BuildEffectiveTransition()
     {
+        // Reduced motion: collapse every animation to an instant state change.
+        if (ShouldReduceMotion()) return InstantTransition();
+
         var t = Transition ?? ConfigCtx?.DefaultTransition;
         if (t == null) return null;
         if (ConfigCtx?.TransitionSpeed is double speed && speed != 1.0)
         {
-            t = new TransitionConfig
-            {
-                Type = t.Type,
-                Duration = t.Duration * speed,
-                Delay = t.Delay,
-                Ease = t.Ease,
-                Stiffness = t.Stiffness,
-                Damping = t.Damping,
-                Mass = t.Mass,
-            };
+            t = t.Clone();
+            t.Duration *= speed;
         }
         return t;
     }
 
     private TransitionConfig BuildEffectiveTransitionWithDelay(double extraDelay)
     {
+        // Reduced motion stays instant — stagger delays are skipped too.
+        if (ShouldReduceMotion()) return InstantTransition();
+
         var t = BuildEffectiveTransition() ?? new TransitionConfig();
         if (extraDelay <= 0) return t;
-        return new TransitionConfig
-        {
-            Type = t.Type,
-            Duration = t.Duration,
-            Delay = t.Delay + extraDelay,
-            Ease = t.Ease,
-            EaseCubicBezier = t.EaseCubicBezier,
-            Repeat = t.Repeat,
-            RepeatType = t.RepeatType,
-            RepeatDelay = t.RepeatDelay,
-            Stiffness = t.Stiffness,
-            Damping = t.Damping,
-            Mass = t.Mass,
-            Velocity = t.Velocity,
-            RestSpeed = t.RestSpeed,
-            RestDelta = t.RestDelta,
-        };
+        t = t.Clone();
+        t.Delay += extraDelay;
+        return t;
     }
 
     private Dictionary<string, object?> BuildEventFlags()

@@ -177,7 +177,7 @@ Provides global animation defaults to an entire subtree via cascading values.
 | Parameter | Type | Description |
 |---|---|---|
 | `Transition` | `TransitionConfig?` | Global default transition for all descendant `<Motion>` elements |
-| `ReduceMotion` | `bool?` | Override motion reduction (`null` = auto-detect user preference) |
+| `ReduceMotion` | `bool?` | Reduced-motion for this subtree: `null` = respect OS preference, `true` = always reduce, `false` = always animate |
 | `TransitionSpeed` | `double` | Scale factor for all animation durations (default: `1.0`) |
 
 ---
@@ -641,13 +641,21 @@ Any time this element's position or size changes (e.g., items being added/remove
 
 ## Accessibility
 
-BlazorMotion respects the user's **prefers-reduced-motion** media query by default. When `ReduceMotion` is not explicitly set on `<MotionConfig>`, the library auto-detects the OS preference and reduces or disables animations accordingly.
+BlazorMotion can honour the user's **prefers-reduced-motion** preference, collapsing animations to instant state changes. To keep it from ever disabling animations an app didn't opt into, this is **scoped to `<MotionConfig>`**: an element only consults the preference when it sits inside one. Elements with no surrounding `<MotionConfig>` always animate.
 
-To override:
+Inside a `<MotionConfig>`, the `ReduceMotion` parameter controls the subtree:
 
 ```razor
-<MotionConfig ReduceMotion="false">
-    <!-- forces animations on even if the OS says reduce motion -->
+<MotionConfig ReduceMotion="null">   @* respect the OS prefers-reduced-motion setting *@
+    ...
+</MotionConfig>
+
+<MotionConfig ReduceMotion="true">   @* always reduce — animations apply instantly *@
+    ...
+</MotionConfig>
+
+<MotionConfig ReduceMotion="false">  @* always animate, regardless of the OS preference *@
+    ...
 </MotionConfig>
 ```
 

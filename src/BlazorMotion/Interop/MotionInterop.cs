@@ -37,6 +37,14 @@ public sealed class MotionInterop : IAsyncDisposable
         await (await Module()).InvokeVoidAsync("stopRafLoop");
     }
 
+    // ── Reduced motion (accessibility) ────────────────────────────────────────
+
+    /// <summary>
+    /// Returns whether the user's OS/browser has <c>prefers-reduced-motion: reduce</c> set.
+    /// </summary>
+    public async ValueTask<bool> PrefersReducedMotionAsync()
+        => await (await Module()).InvokeAsync<bool>("prefersReducedMotion");
+
     // ── Style application ─────────────────────────────────────────────────────
 
     /// <summary>Instantly apply a CSS styles object to a DOM element (for <c>set()</c> calls).</summary>

@@ -1,0 +1,69 @@
+@page "/reduced-motion"
+
+<div class="demo-section">
+    <h2>Reduced Motion (Accessibility)</h2>
+    <p>
+        Reduced motion is opt-in via <strong>&lt;MotionConfig&gt;</strong>, so it never silently
+        disables animations an app didn't ask for. Set <em>ReduceMotion</em> to control a subtree:
+        <code>null</code> respects the OS <strong>prefers-reduced-motion</strong> setting,
+        <code>true</code> collapses every animation to an instant state change, and
+        <code>false</code> forces animations on regardless of the OS preference.
+    </p>
+
+    <div class="demo-row" style="gap:.5rem; flex-wrap:wrap;">
+        <button class="btn-bm" @onclick="@(() => SetMode(null))"
+                style="@ModeStyle(null)">Auto (OS preference)</button>
+        <button class="btn-bm" @onclick="@(() => SetMode(false))"
+                style="@ModeStyle(false)">Force animations on</button>
+        <button class="btn-bm" @onclick="@(() => SetMode(true))"
+                style="@ModeStyle(true)">Reduce (instant)</button>
+    </div>
+
+    <p style="margin-top:.75rem; font-size:.85rem; color:#888;">
+        Current mode: <strong>@ModeLabel</strong>
+    </p>
+
+    @* Re-keyed so toggling the mode re-runs the enter animation under the new config. *@
+    <MotionConfig ReduceMotion="_reduceMotion">
+        <div class="demo-row" @key="_runKey">
+            <div class="demo-card">
+                <Motion Tag="div"
+                        Class="box"
+                        Initial="@(new AnimationProps { Opacity = 0, X = -120, Scale = 0.5 })"
+                        Animate="@(new AnimationProps { Opacity = 1, X = 0, Scale = 1 })"
+                        Transition="@(new TransitionConfig { Type = TransitionType.Tween, Duration = 1.2 })" />
+            </div>
+
+            <div class="demo-card">
+                <Motion Tag="div"
+                        Class="box"
+                        WhileHover="@(new AnimationProps { Scale = 1.3, Rotate = 12 })"
+                        WhileTap="@(new AnimationProps { Scale = 0.85 })"
+                        Transition="@TransitionConfig.Spring(stiffness: 250, damping: 15)" />
+            </div>
+        </div>
+    </MotionConfig>
+
+    <button class="btn-bm" style="margin-top:1rem" @onclick="@(() => _runKey++)">Replay enter</button>
+</div>
+
+@code {
+    private bool? _reduceMotion = null;
+    private int _runKey;
+
+    private void SetMode(bool? mode)
+    {
+        _reduceMotion = mode;
+        _runKey++; // re-mount so the enter animation replays under the new setting
+    }
+
+    private string ModeLabel => _reduceMotion switch
+    {
+        null  => "Auto — follows the operating system setting",
+        true  => "Reduced — animations play instantly",
+        false => "Forced on — animations always play",
+    };
+
+    private string ModeStyle(bool? mode) =>
+        _reduceMotion == mode ? "outline:2px solid #6c47ff; outline-offset:2px;" : "";
+}

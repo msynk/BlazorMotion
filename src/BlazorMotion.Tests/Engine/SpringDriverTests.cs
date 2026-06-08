@@ -151,4 +151,114 @@ public class SpringDriverTests
 
         Assert.True(values[1] > values[0], "Spring with positive velocity should move toward target immediately");
     }
+
+    // ── Repeat ────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void Tick_NoRepeat_CompletesAfterSingleSettle()
+    {
+        // Regression guard: Repeat = 0 must still finish on the first settle.
+        var config = new TransitionConfig { Stiffness = 100, Damping = 20, Mass = 1 };
+        var driver = new SpringDriver(0, 100, config, _ => { });
+
+        int settleTicks = RunUntilComplete(driver);
+
+        Assert.True(settleTicks > 0 && settleTicks < 600);
+    }
+
+    [Fact]
+    public void Tick_RepeatLoop_ReplaysFromOriginBeforeCompleting()
+    {
+        var values = new List<double>();
+        var config = new TransitionConfig
+        {
+            Stiffness = 100,
+            Damping = 20,
+            Mass = 1,
+            Repeat = 1,
+            RepeatType = RepeatType.Loop,
+        };
+        var driver = new SpringDriver(0, 100, config, v => values.Add(v));
+
+        bool done = false;
+        bool reachedTarget = false;
+        bool resetAfterTarget = false;
+        double ts = 0;
+        while (!done && ts < 30_000)
+        {
+            ts += 16.67;
+            done = driver.Tick(ts);
+            double v = values[^1];
+            if (!reachedTarget && v >= 99) reachedTarget = true;
+            else if (reachedTarget && v <= 50) resetAfterTarget = true; // Loop snapped back to origin
+        }
+
+        Assert.True(done, "Repeating spring never completed");
+        Assert.True(resetAfterTarget, "Loop repeat should replay from the origin (value dropped back toward 0)");
+        Assert.Equal(100.0, values[^1], 2); // final cycle still settles at the target
+    }
+
+    [Fact]
+    public void Tick_RepeatMirror_PingPongsBackToStart()
+    {
+        var config = new TransitionConfig
+        {
+            Stiffness = 100,
+            Damping = 20,
+            Mass = 1,
+            Repeat = 1,
+            RepeatType = RepeatType.Mirror,
+        };
+        double lastValue = double.NaN;
+        var driver = new SpringDriver(0, 100, config, v => lastValue = v);
+
+        bool done = false;
+        double ts = 0;
+        while (!done && ts < 30_000)
+        {
+            ts += 16.67;
+            done = driver.Tick(ts);
+        }
+
+        Assert.True(done, "Mirror-repeating spring never completed");
+        // 0 → 100 (cycle 1) then mirrored 100 → 0 (cycle 2): settles back at the origin.
+        Assert.Equal(0.0, lastValue, 2);
+    }
+
+    [Fact]
+    public void Tick_InfiniteRepeat_NeverCompletes()
+    {
+        var config = new TransitionConfig
+        {
+            Stiffness = 100,
+            Damping = 20,
+            Mass = 1,
+            Repeat = int.MaxValue,
+            RepeatType = RepeatType.Loop,
+        };
+        var driver = new SpringDriver(0, 100, config, _ => { });
+
+        bool done = false;
+        double ts = 0;
+        for (int i = 0; i < 2000 && !done; i++) // ~33 s of frames
+        {
+            ts += 16.67;
+            done = driver.Tick(ts);
+        }
+
+        Assert.False(done, "Infinite-repeat spring should never report completion");
+    }
+
+    private static int RunUntilComplete(SpringDriver driver, double maxMs = 30_000)
+    {
+        int ticks = 0;
+        double ts = 0;
+        while (ts < maxMs)
+        {
+            ts += 16.67;
+            ticks++;
+            if (driver.Tick(ts)) return ticks;
+        }
+        return -1;
+    }
 }

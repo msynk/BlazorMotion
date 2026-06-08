@@ -19,8 +19,39 @@ public sealed class AnimationEngine : IAsyncDisposable
     private readonly Dictionary<string, ElementAnimationState> _elements = new();
     private DotNetObjectReference<AnimationEngine>? _dotnet;
     private bool _loopRunning;
+    private bool _reducedMotionDetected;
 
     public AnimationEngine(MotionInterop interop) => _interop = interop;
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Reduced-motion (accessibility)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// The OS-level <c>prefers-reduced-motion</c> preference, detected once via the
+    /// browser. <c>false</c> until <see cref="EnsureReducedMotionDetectedAsync"/> has run.
+    /// </summary>
+    public bool OsPrefersReducedMotion { get; private set; }
+
+    /// <summary>
+    /// Detects the user's <c>prefers-reduced-motion</c> setting from the browser the
+    /// first time it is called and caches the result for the lifetime of this engine.
+    /// </summary>
+    public async ValueTask EnsureReducedMotionDetectedAsync()
+    {
+        if (_reducedMotionDetected) return;
+        _reducedMotionDetected = true;
+        try
+        {
+            OsPrefersReducedMotion = await _interop.PrefersReducedMotionAsync();
+        }
+        catch
+        {
+            // Detection is best-effort: if the browser probe fails we default to
+            // animating normally rather than letting it break element initialisation.
+            OsPrefersReducedMotion = false;
+        }
+    }
 
     // ═══════════════════════════════════════════════════════════════════════════
     // Element lifecycle

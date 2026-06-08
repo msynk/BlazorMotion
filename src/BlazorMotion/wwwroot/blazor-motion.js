@@ -70,6 +70,16 @@ export function getComputedStyleValue(elementId, prop) {
     return el ? (getComputedStyle(el)[prop] ?? '') : '';
 }
 
+//
+// Accessibility — prefers-reduced-motion
+//
+
+/** Returns true when the user has requested reduced motion at the OS/browser level. */
+export function prefersReducedMotion() {
+    return typeof matchMedia === 'function' &&
+        matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 // 
 // Element registration
 // 

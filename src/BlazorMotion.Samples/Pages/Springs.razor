@@ -41,8 +41,54 @@
     <button class="btn-bm" style="margin-top:1rem" @onclick="Remount">Re-mount</button>
 </div>
 
+<div class="demo-section">
+    <h2>Repeating Springs</h2>
+    <p>
+        Springs now honour <strong>Repeat</strong>, <strong>RepeatType</strong> and <strong>RepeatDelay</strong>.
+        <em>Mirror</em> ping-pongs back to the start, <em>Loop</em> replays from the origin.
+    </p>
+
+    <div class="demo-row">
+        <div class="demo-card" style="flex-direction:column; gap:.75rem;">
+            <span style="font-size:.78rem; color:#888">Mirror &middot; infinite</span>
+            <Motion Tag="div"
+                    Class="box box-sm"
+                    Animate="@(_repeat ? new AnimationProps { X = 90 } : new AnimationProps { X = 0 })"
+                    Transition="@(new TransitionConfig
+                    {
+                        Type = TransitionType.Spring,
+                        Stiffness = 200,
+                        Damping = 12,
+                        Repeat = int.MaxValue,
+                        RepeatType = RepeatType.Mirror,
+                    })" />
+        </div>
+
+        <div class="demo-card" style="flex-direction:column; gap:.75rem;">
+            <span style="font-size:.78rem; color:#888">Loop &middot; 3&times; with delay</span>
+            <Motion Tag="div"
+                    Class="box box-sm"
+                    Animate="@(_repeat ? new AnimationProps { Y = 60 } : new AnimationProps { Y = 0 })"
+                    Transition="@(new TransitionConfig
+                    {
+                        Type = TransitionType.Spring,
+                        Stiffness = 300,
+                        Damping = 18,
+                        Repeat = 3,
+                        RepeatType = RepeatType.Loop,
+                        RepeatDelay = 0.3,
+                    })" />
+        </div>
+    </div>
+
+    <button class="btn-bm" style="margin-top:1rem" @onclick="@(() => _repeat = !_repeat)">
+        @(_repeat ? "Reset" : "Start repeating")
+    </button>
+</div>
+
 @code {
     private bool _on;
+    private bool _repeat;
     private int  _mountKey;
 
     private record SpringDemo(string Label, TransitionConfig Config);

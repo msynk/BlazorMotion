@@ -174,6 +174,44 @@ public class TransitionConfig
         _ => "easeOut"
     };
 
+    /// <summary>
+    /// Creates a deep copy of this configuration. Used internally when the library
+    /// needs to derive a variant of a transition (e.g. applying a global
+    /// <see cref="Context.MotionConfigContext.TransitionSpeed"/> scale or a stagger delay)
+    /// without mutating or partially losing the original's fields.
+    /// </summary>
+    public TransitionConfig Clone() => new()
+    {
+        Type = Type,
+        Duration = Duration,
+        Delay = Delay,
+        Ease = Ease,
+        EaseCubicBezier = EaseCubicBezier is null ? null : (double[])EaseCubicBezier.Clone(),
+        Repeat = Repeat,
+        RepeatType = RepeatType,
+        RepeatDelay = RepeatDelay,
+        Times = Times is null ? null : (double[])Times.Clone(),
+        Stiffness = Stiffness,
+        Damping = Damping,
+        Mass = Mass,
+        Velocity = Velocity,
+        RestSpeed = RestSpeed,
+        RestDelta = RestDelta,
+        Bounce = Bounce,
+        VisualDuration = VisualDuration,
+        InertiaVelocity = InertiaVelocity,
+        TimeConstant = TimeConstant,
+        Power = Power,
+        InertiaRestDelta = InertiaRestDelta,
+        InertiaMin = InertiaMin,
+        InertiaMax = InertiaMax,
+        StaggerChildren = StaggerChildren,
+        DelayChildren = DelayChildren,
+        When = When,
+        Properties = Properties,
+        OnUpdate = OnUpdate,
+    };
+
     // ── Factory helpers ───────────────────────────────────────────────────────
     public static TransitionConfig Spring(double stiffness = 100, double damping = 10, double mass = 1)
         => new() { Type = TransitionType.Spring, Stiffness = stiffness, Damping = damping, Mass = mass };

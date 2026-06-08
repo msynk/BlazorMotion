@@ -9,25 +9,32 @@ namespace BlazorMotion.Engine;
 /// </summary>
 internal sealed class SpringDriver : IAnimationDriver
 {
-    private readonly double _target;
+    private double _target;
+    private double _from;
     private readonly double _k;        // stiffness
     private readonly double _d;        // damping
     private readonly double _m;        // mass
+    private readonly double _initialVel;
     private readonly double _restSpeed;
     private readonly double _restDelta;
-    private readonly double _delayMs;
+    private readonly double _repeatDelayMs;
     private readonly double _maxSubDt;
+    private readonly int _repeat;
+    private readonly bool _isInfinite;
+    private readonly RepeatType _repeatType;
     private readonly Action<double> _apply;
 
     private double _pos;
     private double _vel;
+    private double _currentDelayMs;
     private double _lastTs = -1;
     private double _startTs = -1;
+    private int _iteration;
     private bool _cancelled;
 
     public SpringDriver(double from, double to, TransitionConfig config, Action<double> apply)
     {
-        _pos = from;
+        _pos = _from = from;
         _target = to;
 
         // Resolve stiffness/damping: if Bounce+VisualDuration (or Bounce+Duration) are set,
@@ -43,10 +50,14 @@ internal sealed class SpringDriver : IAnimationDriver
         _k = k;
         _d = d;
         _m = config.Mass;
-        _vel = config.Velocity;
+        _vel = _initialVel = config.Velocity;
         _restSpeed = config.RestSpeed;
         _restDelta = config.RestDelta;
-        _delayMs = config.Delay * 1000;
+        _currentDelayMs = config.Delay * 1000;
+        _repeatDelayMs = config.RepeatDelay * 1000;
+        _repeat = config.Repeat;
+        _isInfinite = config.Repeat == int.MaxValue;
+        _repeatType = config.RepeatType;
         _apply = apply;
 
         // Compute a maximum sub-step size that keeps semi-implicit Euler stable
@@ -60,7 +71,7 @@ internal sealed class SpringDriver : IAnimationDriver
         if (_cancelled) { _apply(_target); return true; }
 
         if (_startTs < 0) _startTs = timestamp;
-        if (timestamp - _startTs < _delayMs) { _apply(_pos); return false; }
+        if (timestamp - _startTs < _currentDelayMs) { _apply(_pos); return false; }
 
         if (_lastTs < 0) _lastTs = timestamp;
 
@@ -82,6 +93,20 @@ internal sealed class SpringDriver : IAnimationDriver
         if (Math.Abs(_vel) < _restSpeed && Math.Abs(_pos - _target) < _restDelta)
         {
             _apply(_target);
+
+            if (_isInfinite || _iteration < _repeat)
+            {
+                _iteration++;
+                // Mirror/Reverse ping-pong back to the start; Loop replays from the origin.
+                if (_repeatType is RepeatType.Mirror or RepeatType.Reverse)
+                    (_from, _target) = (_target, _from);
+                _pos = _from;
+                _vel = _initialVel;
+                _lastTs = -1;
+                _startTs = timestamp;            // re-arm the delay window for this repeat
+                _currentDelayMs = _repeatDelayMs;
+                return false;
+            }
             return true;
         }
         return false;
