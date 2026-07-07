@@ -1,3 +1,7 @@
+**Note**: moved to bit platform (https://github.com/bitfoundation/bitplatform)
+
+---
+
 # BlazorMotion
 
 A Blazor-native animation library inspired by [Framer Motion](https://www.framer.com/motion/). Springs, gestures, layout animations, variants, and keyframes — **zero JavaScript dependencies**. All animation math runs in C# via WebAssembly.
